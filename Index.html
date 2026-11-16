@@ -39,7 +39,7 @@
                     <div class="flex items-center space-x-2">
                         <span class="text-xl font-extrabold tracking-tight text-slate-900">Blue Eighty</span>
                         <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sleeper + Supabase Synced
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sleeper Projections + Supabase Synced
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 font-medium">Weekly $60k Salary Cap • H2H League • Q1 Injury Shield™</p>
@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing live Sleeper roster feed & micro-tier valuations...
+                    🔄 Syncing live Sleeper weekly projections & $60k market valuations...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -205,7 +205,7 @@
                                 <th class="py-3 px-4">Player / Team / Matchup Rating</th>
                                 <th class="py-3 px-4">Pos</th>
                                 <th class="py-3 px-4">Salary Tag</th>
-                                <th class="py-3 px-4">Matchup-Adjusted Proj.</th>
+                                <th class="py-3 px-4">Sleeper Projected Proj.</th>
                                 <th class="py-3 px-4 text-right">Action</th>
                             </tr>
                         </thead>
@@ -256,9 +256,29 @@
 
         <!-- ================= TAB 5: STANDINGS ================= -->
         <div id="tab-content-standings" class="space-y-6 hidden">
-            <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm p-6">
-                <h3 class="text-base font-bold text-slate-900">Blue Eighty League Standings</h3>
-                <p class="text-xs text-slate-500 mt-1">Live weekly H2H cap efficiency tracking across all 12 managers.</p>
+            <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Blue Eighty League Standings</h3>
+                        <p class="text-xs text-slate-500 mt-1">Live weekly H2H records and total points efficiency across all 12 managers.</p>
+                    </div>
+                    <button onclick="fetchStandingsFromSupabase()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition">
+                        🔄 Refresh Standings
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-4">Rank</th>
+                                <th class="py-3 px-4">Team & Manager</th>
+                                <th class="py-3 px-4 text-center">Record (W-L)</th>
+                                <th class="py-3 px-4 text-right">Total Points For</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-800" id="standings-tbody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -301,7 +321,7 @@
                     <span class="font-bold text-indigo-600" id="bio-matchup-grade">Soft Matchup</span>
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-slate-100">
-                    <span class="text-slate-500 font-medium">Matchup-Adjusted Proj:</span>
+                    <span class="text-slate-500 font-medium">Sleeper Projected Proj:</span>
                     <span class="font-bold text-blue-600 mono-num" id="bio-proj">0.0 pts</span>
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-slate-100">
@@ -333,6 +353,7 @@
         let selectedPosFilter = 'ALL';
         let isQ1InjuredActive = false;
         let registeredTeams = [];
+        let leagueStandings = [];
         let currentNFLWeek = 11;
 
         function getCurrentNFLWeek() {
@@ -398,6 +419,7 @@
             
             await initSupabaseLeague();
             await loadLiveSleeperAndESPNData(currentNFLWeek);
+            await fetchStandingsFromSupabase();
         };
 
         async function initSupabaseLeague() {
@@ -420,6 +442,21 @@
             if (!error && data) {
                 registeredTeams = data.map(t => ({ owner: t.owner, team: t.team_name, email: t.email }));
                 renderRegisteredTeams();
+            }
+        }
+
+        async function fetchStandingsFromSupabase() {
+            const { data, error } = await _supabase
+                .from('league_standings')
+                .select('*')
+                .order('wins', { ascending: false })
+                .order('points_for', { ascending: false });
+
+            if (!error && data) {
+                leagueStandings = data;
+                renderStandings();
+            } else {
+                renderStandingsFallback();
             }
         }
 
@@ -489,26 +526,24 @@
                 console.warn("ESPN Scoreboard warning:", err);
             }
 
-            // 2. Fetch live master roster from Sleeper API (with daily localStorage cache)
+            // 2. Fetch live master roster & weekly projections from Sleeper
             let sleeperRosterMap = {};
-            try {
-                const cachedData = localStorage.getItem('sleeper_nfl_players_v2');
-                const cachedTime = localStorage.getItem('sleeper_cache_time_v2');
-                const twentyFourHours = 24 * 60 * 60 * 1000;
+            let sleeperProjectionsMap = {};
 
-                if (cachedData && cachedTime && (Date.now() - cachedTime < twentyFourHours)) {
-                    sleeperRosterMap = JSON.parse(cachedData);
-                } else {
-                    const sleeperRes = await fetch('https://api.sleeper.app/v1/players/nfl');
-                    if (sleeperRes.ok) {
-                        sleeperRosterMap = await sleeperRes.json();
-                        try {
-                            localStorage.setItem('sleeper_nfl_players_v2', JSON.stringify(sleeperRosterMap));
-                            localStorage.setItem('sleeper_cache_time_v2', Date.now());
-                        } catch (storageErr) {
-                            console.warn("localStorage quota exceeded, skipping cache:", storageErr);
+            try {
+                const [playersRes, projRes] = await Promise.all([
+                    fetch('https://api.sleeper.app/v1/players/nfl'),
+                    fetch(`https://api.sleeper.app/projections/nfl/2026/${weekNum}?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=DEF`)
+                ]);
+
+                if (playersRes.ok) sleeperRosterMap = await playersRes.json();
+                if (projRes.ok) {
+                    const projArray = await projRes.json();
+                    projArray.forEach(item => {
+                        if (item.player_id && item.stats) {
+                            sleeperProjectionsMap[item.player_id] = item.stats.pts_half_ppr || item.stats.pts_ppr || 0;
                         }
-                    }
+                    });
                 }
             } catch (err) {
                 console.warn("Sleeper API fetch warning, using fallback roster:", err);
@@ -516,87 +551,80 @@
 
             let rawDatabase = [];
 
-            // 3. Strictly filter and sort Sleeper data by search_rank & active depth chart
+            // 3. Process and filter using actual Sleeper weekly projections
             if (Object.keys(sleeperRosterMap).length > 0) {
-                const validPlayers = Object.values(sleeperRosterMap).filter(pl => {
-                    const hasValidPos = pl.position && ['QB', 'RB', 'WR', 'TE'].includes(pl.position);
-                    const isCurrentlyActive = pl.active === true && pl.status === 'Active';
-                    const hasRealTeam = pl.team && (Object.keys(teamOpponents).length === 0 || teamOpponents[pl.team]);
-                    const isRelevant = pl.search_rank && pl.search_rank < 1500;
-                    const hasDepthChart = pl.depth_chart_order && pl.depth_chart_order <= 4;
+                const validPlayers = Object.entries(sleeperRosterMap)
+                    .map(([id, pl]) => ({
+                        id,
+                        ...pl,
+                        liveProj: sleeperProjectionsMap[id] || 0
+                    }))
+                    .filter(pl => {
+                        const hasValidPos = pl.position && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(pl.position);
+                        const isCurrentlyActive = pl.active === true && (pl.status === 'Active' || pl.position === 'DEF');
+                        const hasRealTeam = pl.team && (Object.keys(teamOpponents).length === 0 || teamOpponents[pl.team]);
+                        const hasProjection = pl.liveProj > 2.0; // Automatically filters out injured/inactive/bye players
 
-                    return hasValidPos && isCurrentlyActive && hasRealTeam && isRelevant && hasDepthChart;
-                });
+                        return hasValidPos && isCurrentlyActive && hasRealTeam && hasProjection;
+                    });
 
-                // Sort ascending by search_rank so current top starters appear first
-                validPlayers.sort((a, b) => a.search_rank - b.search_rank);
+                // Sort by actual projected points descending
+                validPlayers.sort((a, b) => b.liveProj - a.liveProj);
 
-                const topQBs = validPlayers.filter(p => p.position === 'QB').slice(0, 15);
-                const topRBs = validPlayers.filter(p => p.position === 'RB').slice(0, 25);
-                const topWRs = validPlayers.filter(p => p.position === 'WR').slice(0, 40);
+                const topQBs = validPlayers.filter(p => p.position === 'QB').slice(0, 20);
+                const topRBs = validPlayers.filter(p => p.position === 'RB').slice(0, 35);
+                const topWRs = validPlayers.filter(p => p.position === 'WR').slice(0, 45);
                 const topTEs = validPlayers.filter(p => p.position === 'TE').slice(0, 25);
+                const topDEFs = validPlayers.filter(p => p.position === 'DEF').slice(0, 32);
 
-                const combinedPool = [...topQBs, ...topRBs, ...topWRs, ...topTEs];
-                const posCounters = { QB: 0, RB: 0, WR: 0, TE: 0 };
+                const combinedPool = [...topQBs, ...topRBs, ...topWRs, ...topTEs, ...topDEFs];
+                const posCounters = { QB: 0, RB: 0, WR: 0, TE: 0, DEF: 0 };
 
                 combinedPool.forEach(pl => {
                     posCounters[pl.position]++;
-                    const rank = posCounters[pl.position];
-
-                    let baseProj = 10.0;
-                    if (pl.position === 'QB') baseProj = Math.max(12.0, 24.5 - (rank * 0.65));
-                    else if (pl.position === 'RB') baseProj = Math.max(8.0, 20.5 - (rank * 0.42));
-                    else if (pl.position === 'WR') baseProj = Math.max(8.0, 21.0 - (rank * 0.30));
-                    else if (pl.position === 'TE') baseProj = Math.max(6.5, 15.5 - (rank * 0.35));
-
                     rawDatabase.push({
-                        name: pl.full_name,
+                        name: pl.position === 'DEF' ? `${pl.team} Defense` : pl.full_name,
                         pos: pl.position,
                         team: pl.team,
-                        baseProj: parseFloat(baseProj.toFixed(1)),
-                        posRank: rank
+                        baseProj: parseFloat(pl.liveProj.toFixed(1)),
+                        posRank: posCounters[pl.position]
                     });
                 });
             }
 
-            // Fallback curated database if API is offline
+            // Fallback database if API is offline
             if (rawDatabase.length < 30) {
                 rawDatabase = [
-                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
-                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.1, posRank: 2 },
-                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.8, posRank: 3 },
-                    { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.2, posRank: 4 },
-                    { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.4, posRank: 5 },
+                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
+                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
+                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
                     { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
-                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.6, posRank: 2 },
-                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.2, posRank: 3 },
-                    { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.7, posRank: 4 },
-                    { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.3, posRank: 5 },
-                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.3, posRank: 1 },
-                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.9, posRank: 2 },
-                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.4, posRank: 3 },
-                    { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.9, posRank: 4 },
-                    { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.4, posRank: 5 },
-                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.1, posRank: 1 },
-                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.6, posRank: 2 },
-                    { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.8, posRank: 3 }
+                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.2, posRank: 2 },
+                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
+                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
+                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
+                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
+                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
+                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 }
                 ];
             }
 
-            // Add active NFL Defenses rated between $3,000 and $6,000 (excluding Bye weeks)
+            // Add active NFL Defenses rated strictly between $3,000 and $6,000
             const nflTeamsList = ['SF', 'MIN', 'PIT', 'DEN', 'HOU', 'BAL', 'KC', 'BUF', 'NYJ', 'PHI', 'GB', 'CHI', 'SEA', 'LAC', 'CLE', 'DAL', 'DET', 'MIA', 'TB', 'CIN', 'ATL', 'IND', 'WAS', 'ARI', 'NE', 'NYG', 'LV', 'LAR', 'NO', 'CAR', 'TEN', 'JAX'];
             let defRankCounter = 0;
             nflTeamsList.forEach(teamCode => {
                 let opp = teamOpponents[teamCode];
                 if (opp || Object.keys(teamOpponents).length === 0) {
                     defRankCounter++;
-                    rawDatabase.push({
-                        name: `${teamCode} Defense`,
-                        pos: 'DEF',
-                        team: teamCode,
-                        baseProj: parseFloat((9.5 - ((defRankCounter - 1) * 0.2)).toFixed(1)),
-                        posRank: defRankCounter
-                    });
+                    if (!rawDatabase.some(p => p.pos === 'DEF' && p.team === teamCode)) {
+                        rawDatabase.push({
+                            name: `${teamCode} Defense`,
+                            pos: 'DEF',
+                            team: teamCode,
+                            baseProj: parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
+                            posRank: defRankCounter
+                        });
+                    }
                 }
             });
 
@@ -609,24 +637,20 @@
                                     p.pos === 'WR' ? defRanks.vsWR : 
                                     p.pos === 'TE' ? defRanks.vsTE : 16;
 
-                let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
-                let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
-                
-                let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric, p.posRank || 1, p.name);
-                
+                let salary = convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
                 let oppTag = teamOpponents[p.team] || 'vs OPP';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
 
                 return {
                     ...p,
                     opponent: oppTag,
-                    proj: adjustedProj,
+                    proj: p.baseProj,
                     salary: salary,
                     matchupGrade: grade
                 };
             });
 
-            // Populate initial starting lineup automatically from live pool
+            // Populate initial lineup automatically from live pool
             if (rosterSlots[0].player === null && playerPool.length > 5) {
                 const qbs = playerPool.filter(p => p.pos === 'QB');
                 const rbs = playerPool.filter(p => p.pos === 'RB');
@@ -648,28 +672,28 @@
             initAppUI();
         }
 
+        // Calibrated $60k Cap Pricing Curve
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
+            const uniqueOffset = ((hashCode(playerName) % 8) * 10);
+
             if (position === 'DEF') {
-                let baseDefPrice = 3000 + ((32 - posRank) * 80);
-                let defOffset = Math.abs(hashCode(playerName) % 350);
-                return Math.min(Math.max(Math.round((baseDefPrice + defOffset) / 10) * 10, 3000), 6000);
+                // Strict $3,000 to $6,000 range for Defenses
+                const defBase = 2600 + (projectedPoints * 280) + uniqueOffset;
+                return Math.min(Math.max(Math.round(defBase / 10) * 10, 3000), 6000);
             }
 
-            let basePrice = 4500;
-            let multiplier = 220;
-            
-            if (position === 'QB') { basePrice = 5200; multiplier = 242; }
-            else if (position === 'RB') { basePrice = 5000; multiplier = 252; }
-            else if (position === 'WR') { basePrice = 5000; multiplier = 247; }
-            else if (position === 'TE') { basePrice = 4200; multiplier = 208; }
+            let floor = 3800;
+            let perPointRate = 240;
 
-            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 170);
-            let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
-            
-            let uniqueHashOffset = ((hashCode(playerName) % 9) * 10) + ((posRank % 3) * 5);
-            let finalSalary = Math.round((rawSalary + uniqueHashOffset) / 10) * 10;
+            if (position === 'QB') { floor = 4400; perPointRate = 215; }
+            else if (position === 'RB') { floor = 3900; perPointRate = 265; }
+            else if (position === 'WR') { floor = 3800; perPointRate = 260; }
+            else if (position === 'TE') { floor = 3600; perPointRate = 275; }
 
-            return Math.min(Math.max(finalSalary, 2500), 9600);
+            const rawSalary = floor + (projectedPoints * perPointRate) + uniqueOffset;
+            const finalSalary = Math.round(rawSalary / 10) * 10;
+
+            return Math.min(Math.max(finalSalary, 3500), 9900);
         }
 
         function hashCode(str) {
@@ -725,7 +749,7 @@
                                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${slot.player.matchupGrade || 'Neutral'}</span>
                                         ${isInjuredQ1 ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">🛡️ Q1 INJURED</span>` : ''}
                                     </div>
-                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Adjusted Proj: ${slot.player.proj} pts</p>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Projected Proj: ${slot.player.proj} pts</p>
                                 ` : `
                                     <p class="text-sm font-medium text-slate-400 italic">Empty Slot</p>
                                 `}
@@ -949,6 +973,55 @@
                 document.getElementById('reg-submit-btn').disabled = true;
                 document.getElementById('reg-submit-btn').innerText = "League Full (12/12)";
                 document.getElementById('reg-submit-btn').className = "w-full bg-slate-300 text-slate-500 py-3 rounded-xl text-xs font-bold cursor-not-allowed";
+            }
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standings-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (leagueStandings.length === 0) {
+                renderStandingsFallback();
+                return;
+            }
+
+            leagueStandings.forEach((st, idx) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3 px-4 font-extrabold text-blue-600">#${idx + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            ${st.team_name} 
+                            <span class="text-xs font-semibold text-slate-500 block">Manager: ${st.manager_name}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center mono-num font-bold text-slate-800">${st.wins} - ${st.losses}</td>
+                        <td class="py-3 px-4 text-right mono-num font-bold text-blue-600">${parseFloat(st.points_for).toFixed(1)} pts</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderStandingsFallback() {
+            const tbody = document.getElementById('standings-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (registeredTeams.length > 0) {
+                registeredTeams.forEach((t, idx) => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="py-3 px-4 font-extrabold text-slate-400">#${idx + 1}</td>
+                            <td class="py-3 px-4 font-bold text-slate-900">
+                                ${t.team} 
+                                <span class="text-xs font-semibold text-slate-500 block">Manager: ${t.owner}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center mono-num font-bold text-slate-800">0 - 0</td>
+                            <td class="py-3 px-4 text-right mono-num font-bold text-blue-600">0.0 pts</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 italic">No registered teams found in the league yet.</td></tr>`;
             }
         }
 
