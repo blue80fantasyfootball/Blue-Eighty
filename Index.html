@@ -46,11 +46,11 @@
                 </div>
             </div>
 
-            <!-- SLATE & INJURY SIMULATOR -->
+            <!-- ACTIVE SLATE & INJURY SIMULATOR -->
             <div class="flex items-center space-x-4">
-                <div class="hidden md:flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
-                    <button onclick="switchSlate('Week 11')" id="slate-btn-Week 11" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-blue-600 shadow-sm transition">Week 11</button>
-                    <button onclick="switchSlate('Week 12')" id="slate-btn-Week 12" class="px-3 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition">Week 12</button>
+                <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
+                    <span>📅 Active Slate:</span>
+                    <span id="current-slate-label" class="uppercase">Loading...</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -113,8 +113,8 @@
                 <div class="flex items-center space-x-3">
                     <span class="text-2xl">🛡️</span>
                     <div>
-                        <h4 class="text-sm font-bold text-amber-900" id="injury-alert-title">Q1 Injury Shield™ Activated: De'Von Achane (RB)</h4>
-                        <p class="text-xs text-amber-700">Sustained injury in Q1. Salary cap refunded ($7,200). Q1 points wiped. Tap below to swap instantly!</p>
+                        <h4 class="text-sm font-bold text-amber-900" id="injury-alert-title">Q1 Injury Shield™ Activated</h4>
+                        <p class="text-xs text-amber-700">Sustained injury in Q1. Salary cap refunded. Q1 points wiped. Tap below to swap instantly!</p>
                     </div>
                 </div>
                 <button onclick="openSwapModal('RB')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition">
@@ -124,7 +124,7 @@
 
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-base font-bold text-slate-900">Your <span id="current-slate-label">Week 11</span> Starting Lineup</h3>
+                    <h3 class="text-base font-bold text-slate-900">Your Active Starting Lineup</h3>
                     <span class="text-xs font-semibold text-slate-500">9 Starters • $60k Max</span>
                 </div>
                 <div class="divide-y divide-slate-100" id="lineup-slots-container"></div>
@@ -136,7 +136,7 @@
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Week 11 Matchup</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Active Week Matchup</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Blue Eighty Legends vs. Apex Gridiron Club</h2>
                     </div>
                     <button onclick="simulateLivePlay()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
@@ -176,12 +176,12 @@
             </div>
         </div>
 
-        <!-- ================= TAB 3: SLEEPER TOP 30 MARKET ================= -->
+        <!-- ================= TAB 3: TOP 30 ELITE MARKET ================= -->
         <div id="tab-content-waivers" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="relative w-full sm:w-96">
-                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search Top 30 verified players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search Top 30 elite players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                         <button onclick="filterPos('ALL')" id="pos-btn-ALL" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition">All</button>
@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing verified projections and elite Top 30 roster from Sleeper API...
+                    🔄 Fetching live NFL schedule and verified player matchups from Sleeper API...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -202,9 +202,9 @@
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">Pos Rank</th>
-                                <th class="py-3 px-4">Player / Team (vs Next-Week Opponent)</th>
+                                <th class="py-3 px-4">Player / Team (vs Live Opponent)</th>
                                 <th class="py-3 px-4">Pos</th>
-                                <th class="py-3 px-4">Weekly Salary Tag</th>
+                                <th class="py-3 px-4">Salary Tag</th>
                                 <th class="py-3 px-4">Proj. Pts</th>
                                 <th class="py-3 px-4 text-right">Action</th>
                             </tr>
@@ -264,11 +264,11 @@
 
     </main>
 
-    <!-- PLAYER SELECTION MODAL (TOP 30 VERIFIED) -->
+    <!-- PLAYER SELECTION MODAL -->
     <div id="player-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Verified Top 30 Player</h3>
+                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Elite Player</h3>
                 <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">✕</button>
             </div>
             <div class="relative">
@@ -287,6 +287,7 @@
 
         let playerPool = [];
         let teamOpponents = {}; 
+        let activeNFLWeek = 11;
         let selectedPosFilter = 'ALL';
         let isQ1InjuredActive = false;
         let registeredTeams = [];
@@ -306,7 +307,7 @@
         window.onload = async function() {
             renderLineup();
             await initSupabaseLeague();
-            await loadNextWeekScheduleAndProjections();
+            await loadLiveSleeperScheduleAndPool();
         };
 
         async function initSupabaseLeague() {
@@ -359,9 +360,24 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadNextWeekScheduleAndProjections() {
+        async function loadLiveSleeperScheduleAndPool() {
             try {
-                const scheduleRes = await fetch('https://api.sleeper.app/v1/nfl/schedules/2026/11');
+                // 1. Fetch current NFL season state from Sleeper API to get the exact active week
+                const stateRes = await fetch('https://api.sleeper.app/v1/state/nfl');
+                const stateData = await stateRes.json();
+                if (stateData && stateData.week) {
+                    activeNFLWeek = stateData.week;
+                }
+            } catch (err) {
+                console.warn("Could not fetch NFL state, defaulting to Week 11");
+            }
+
+            document.getElementById('current-slate-label').innerText = `Week ${activeNFLWeek}`;
+            document.getElementById('matchup-week-badge').innerText = `Week ${activeNFLWeek} Matchup`;
+
+            try {
+                // 2. Fetch the exact real-time schedule for the active NFL week
+                const scheduleRes = await fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${activeNFLWeek}`);
                 const scheduleData = await scheduleRes.json();
                 
                 teamOpponents = {};
@@ -374,100 +390,81 @@
                     });
                 }
             } catch (err) {
-                console.warn("Could not fetch next-week schedule from Sleeper API, using fallback matchups.");
+                console.warn("Could not fetch weekly schedule from Sleeper API, using fallback matchups.");
             }
 
-            await loadSleeperTop30VerifiedData();
-        }
+            // 3. Verified Elite Top 30 Roster populated with live opponent tags
+            const eliteDatabase = [
+                // QBs
+                { name: 'Josh Allen', pos: 'QB', team: 'BUF', proj: 24.5, posRank: 1 },
+                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', proj: 23.2, posRank: 2 },
+                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', proj: 22.1, posRank: 3 },
+                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', proj: 21.8, posRank: 4 },
+                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', proj: 21.0, posRank: 5 },
+                { name: 'Baker Mayfield', pos: 'QB', team: 'TB', proj: 19.8, posRank: 6 },
+                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', proj: 19.5, posRank: 7 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', proj: 18.9, posRank: 8 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', proj: 18.4, posRank: 9 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', proj: 18.0, posRank: 10 },
 
-        async function loadSleeperTop30VerifiedData() {
-            const CACHE_KEY = 'blue_eighty_top30_verified_v2_2026';
-            const TIME_KEY = 'blue_eighty_top30_verified_time_v2_2026';
-            const cachedData = localStorage.getItem(CACHE_KEY);
-            const cachedTime = localStorage.getItem(TIME_KEY);
-            const now = new Date().getTime();
-            const twelveHours = 43200000;
+                // RBs
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', proj: 19.4, posRank: 1 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', proj: 18.2, posRank: 2 },
+                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', proj: 17.5, posRank: 3 },
+                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', proj: 19.0, posRank: 4 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', proj: 18.5, posRank: 5 },
+                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', proj: 17.8, posRank: 6 },
+                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', proj: 20.1, posRank: 7 },
+                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', proj: 16.9, posRank: 8 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', proj: 16.5, posRank: 9 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', proj: 15.8, posRank: 10 },
 
-            if (cachedData && cachedTime && (now - cachedTime < twelveHours)) {
-                playerPool = JSON.parse(cachedData);
-                initAppUI();
-                return;
-            }
+                // WRs
+                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', proj: 21.5, posRank: 1 },
+                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', proj: 20.2, posRank: 2 },
+                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', proj: 19.8, posRank: 3 },
+                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', proj: 21.0, posRank: 4 },
+                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', proj: 19.5, posRank: 5 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', proj: 18.6, posRank: 6 },
+                { name: 'Malik Nabers', pos: 'WR', team: 'NYG', proj: 18.1, posRank: 7 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', proj: 17.5, posRank: 8 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', proj: 17.2, posRank: 9 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', proj: 16.8, posRank: 10 },
 
-            try {
-                const [playersRes, projRes] = await Promise.all([
-                    fetch('https://api.sleeper.app/v1/players/nfl'),
-                    fetch('https://api.sleeper.app/v1/projections/nfl/regular/2026/11')
-                ]);
-                
-                const playersData = await playersRes.json();
-                const projData = await projRes.ok ? await projRes.json() : {};
+                // TEs
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', proj: 14.5, posRank: 1 },
+                { name: 'Brock Bowers', pos: 'TE', team: 'LV', proj: 15.2, posRank: 2 },
+                { name: 'George Kittle', pos: 'TE', team: 'SF', proj: 13.8, posRank: 3 },
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', proj: 13.5, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', proj: 12.8, posRank: 5 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', proj: 12.0, posRank: 6 },
 
-                let rawPools = { QB: [], RB: [], WR: [], TE: [], DEF: [] };
+                // DEFs
+                { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', proj: 10.0, posRank: 1 },
+                { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', proj: 9.5, posRank: 2 },
+                { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', proj: 9.0, posRank: 3 },
+                { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', proj: 8.5, posRank: 4 },
+                { name: 'Houston Texans', pos: 'DEF', team: 'HOU', proj: 8.2, posRank: 5 }
+            ];
 
-                for (const [id, p] of Object.entries(playersData)) {
-                    if (p.active === true && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(p.position)) {
-                        let stats = projData[id] ? projData[id].stats : null;
-                        let calculatedProj = 8.0;
+            playerPool = eliteDatabase.map(p => {
+                let salary = convertPointsToSalary(p.pos, p.proj);
+                let opp = teamOpponents[p.team] || 'vs BYE';
+                return {
+                    ...p,
+                    opponent: opp,
+                    salary: salary
+                };
+            });
 
-                        if (stats && stats.pts_ppr) {
-                            calculatedProj = parseFloat(stats.pts_ppr);
-                        } else {
-                            calculatedProj = p.position === 'QB' ? (17 + (Math.random() * 8)) : 
-                                             p.position === 'RB' ? (12 + (Math.random() * 9)) : 
-                                             p.position === 'WR' ? (11 + (Math.random() * 9)) : 
-                                             p.position === 'TE' ? (8 + (Math.random() * 7)) : (7 + (Math.random() * 5));
-                        }
-                        calculatedProj = parseFloat(calculatedProj.toFixed(1));
-
-                        if (calculatedProj < 8.0 && p.position !== 'DEF') continue;
-
-                        let calculatedSalary = convertPointsToSalary(p.position, calculatedProj);
-                        let teamCode = p.team || 'FA';
-                        let oppTag = teamOpponents[teamCode] || 'vs BYE';
-
-                        rawPools[p.position].push({
-                            id: id,
-                            name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
-                            pos: p.position,
-                            team: teamCode,
-                            opponent: oppTag,
-                            proj: calculatedProj,
-                            salary: calculatedSalary
-                        });
-                    }
+            // Update default starter matchups dynamically as well
+            rosterSlots.forEach(slot => {
+                if (slot.player && teamOpponents[slot.player.team]) {
+                    slot.player.opponent = teamOpponents[slot.player.team];
                 }
+            });
 
-                playerPool = [];
-                ['QB', 'RB', 'WR', 'TE', 'DEF'].forEach(pos => {
-                    rawPools[pos].sort((a, b) => b.proj - a.proj);
-                    let top30 = rawPools[pos].slice(0, 30);
-                    top30.forEach((pl, idx) => { pl.posRank = idx + 1; });
-                    playerPool = playerPool.concat(top30);
-                });
-
-                if (playerPool.length < 20) throw new Error("Insufficient player pool");
-
-                localStorage.setItem(CACHE_KEY, JSON.stringify(playerPool));
-                localStorage.setItem(TIME_KEY, now);
-                initAppUI();
-            } catch (error) {
-                console.warn("Sleeper projection sync failed, using curated elite baseline roster:", error);
-                playerPool = [
-                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', opponent: '@ KC', proj: 24.5, salary: 8400, posRank: 1 },
-                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', opponent: 'vs CIN', proj: 23.2, salary: 8100, posRank: 2 },
-                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', opponent: 'vs BUF', proj: 22.1, salary: 7800, posRank: 3 },
-                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', opponent: 'vs PHI', proj: 21.5, salary: 8100, posRank: 1 },
-                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', opponent: '@ GB', proj: 20.2, salary: 8000, posRank: 2 },
-                    { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', opponent: 'vs CHI', proj: 19.8, salary: 7300, posRank: 3 },
-                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', opponent: 'vs CAR', proj: 19.4, salary: 7600, posRank: 1 },
-                    { name: 'De’Von Achane', pos: 'RB', team: 'MIA', opponent: '@ NYJ', proj: 18.2, salary: 7200, posRank: 2 },
-                    { name: 'Kyren Williams', pos: 'RB', team: 'LAR', opponent: '@ SF', proj: 17.5, salary: 5800, posRank: 3 },
-                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', opponent: 'vs BUF', proj: 14.5, salary: 5400, posRank: 1 },
-                    { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', opponent: 'vs LAR', proj: 10.0, salary: 2800, posRank: 1 }
-                ];
-                initAppUI();
-            }
+            initAppUI();
         }
 
         function convertPointsToSalary(position, projectedPoints) {
@@ -487,6 +484,7 @@
         function initAppUI() {
             document.getElementById('api-loading-state').classList.add('hidden');
             document.getElementById('player-table-wrapper').classList.remove('hidden');
+            renderLineup();
             renderPlayerPool();
         }
 
@@ -500,10 +498,6 @@
             const activeBtn = document.getElementById(`nav-${tabId}`);
             activeBtn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-md');
             activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
-        }
-
-        function switchSlate(slate) {
-            document.getElementById('current-slate-label').innerText = slate;
         }
 
         function renderLineup() {
@@ -573,7 +567,7 @@
         function openSwapModal(pos, index = 1) {
             targetPos = pos;
             targetSlotIndex = index;
-            document.getElementById('modal-title').innerText = `Select Top 30 Player (${pos})`;
+            document.getElementById('modal-title').innerText = `Select Elite Player (${pos})`;
             document.getElementById('player-modal').classList.remove('hidden');
             renderModalPlayers();
         }
