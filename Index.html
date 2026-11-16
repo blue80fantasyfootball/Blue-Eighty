@@ -50,7 +50,7 @@
             <div class="flex items-center space-x-4">
                 <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
                     <span>📅 Active Slate:</span>
-                    <span id="current-slate-label" class="uppercase">2026 Week 11</span>
+                    <span id="current-slate-label" class="uppercase">Syncing API...</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -146,7 +146,7 @@
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">2026 Week 11 Matchup</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Live Week Matchup</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Blue Eighty Legends vs. Apex Gridiron Club</h2>
                     </div>
                     <button onclick="simulateLivePlay()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
@@ -180,7 +180,7 @@
                     <span class="text-xl">🚨</span>
                     <div>
                         <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Sleeper Feed)</h4>
-                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with 2026 NFL Week 11 active feeds...</p>
+                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with live NFL state telemetry...</p>
                     </div>
                 </div>
             </div>
@@ -204,7 +204,7 @@
                 </div>
 
                 <div id="market-loading-msg" class="py-8 text-center text-xs font-bold text-slate-400">
-                    🔄 Syncing live active NFL player directory from Sleeper API (Top 20 QBs, 30 RBs, 50 WRs, 30 TEs, 32 DEFs)...
+                    🔄 Syncing live active NFL player directory & schedule from Sleeper API...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -379,7 +379,7 @@
         ];
 
         window.onload = function() {
-            loadCorrect2026Week11Data();
+            loadDynamicSleeperData();
             initSupabaseLeague();
             fetchStandingsFromSupabase();
         };
@@ -453,69 +453,60 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadCorrect2026Week11Data() {
+        async function loadDynamicSleeperData() {
             teamOpponents = {};
             let teamOpponentCode = {};
 
+            try {
+                // 1. Auto-detect active NFL week and season from Sleeper state API
+                const stateRes = await fetch('https://api.sleeper.app/v1/state/nfl');
+                const nflState = await stateRes.json();
+                
+                const currentWeek = nflState.week || 11;
+                const seasonYear = nflState.season || '2026';
+                
+                document.getElementById('current-slate-label').innerText = `${seasonYear} WEEK ${currentWeek}`;
+                document.getElementById('matchup-week-badge').innerText = `${seasonYear} Week ${currentWeek} Matchup`;
+
+                // 2. Fetch live game schedule for the current active week
+                const scheduleRes = await fetch(`https://api.sleeper.app/v1/schedule/nfl/${seasonYear}/${currentWeek}`);
+                const weekSchedule = await scheduleRes.json();
+
+                if (Array.isArray(weekSchedule)) {
+                    weekSchedule.forEach(game => {
+                        let home = game.home_team;
+                        let away = game.away_team;
+                        let timeStr = game.start_time ? new Date(game.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sun 1:00 PM';
+
+                        teamOpponents[home] = `vs ${away} (${timeStr})`;
+                        teamOpponents[away] = `@ ${home} (${timeStr})`;
+                        teamOpponentCode[home] = away;
+                        teamOpponentCode[away] = home;
+                    });
+                }
+            } catch (err) {
+                console.warn("Dynamic state/schedule fetch fallback engaged:", err);
+                document.getElementById('current-slate-label').innerText = `2026 WEEK 11`;
+            }
+
             const defensiveMatchupRatings = {
-                'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
-                'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
-                'BAL': { vsQB: 8, vsRB: 5, vsWR: 10, vsTE: 6 },
-                'PHI': { vsQB: 25, vsRB: 28, vsWR: 22, vsTE: 24 },
-                'CIN': { vsQB: 28, vsRB: 26, vsWR: 29, vsTE: 25 },
-                'MIA': { vsQB: 18, vsRB: 22, vsWR: 15, vsTE: 19 },
-                'ATL': { vsQB: 16, vsRB: 12, vsWR: 18, vsTE: 14 },
-                'DAL': { vsQB: 20, vsRB: 24, vsWR: 21, vsTE: 22 },
-                'MIN': { vsQB: 6, vsRB: 4, vsWR: 8, vsTE: 5 },
-                'DET': { vsQB: 12, vsRB: 10, vsWR: 14, vsTE: 11 },
-                'LAR': { vsQB: 15, vsRB: 14, vsWR: 16, vsTE: 17 },
-                'SF': { vsQB: 7, vsRB: 6, vsWR: 9, vsTE: 8 },
-                'NYJ': { vsQB: 5, vsRB: 8, vsWR: 6, vsTE: 7 },
-                'HOU': { vsQB: 9, vsRB: 11, vsWR: 7, vsTE: 10 },
-                'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 },
-                'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
-                'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 },
-                'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
-                'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 },
-                'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
-                'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 },
-                'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
-                'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 },
-                'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
-                'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 },
-                'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
-                'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 },
-                'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
-                'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 },
-                'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
-                'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 },
-                'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
+                'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 }, 'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
+                'BAL': { vsQB: 8, vsRB: 5, vsWR: 10, vsTE: 6 }, 'PHI': { vsQB: 25, vsRB: 28, vsWR: 22, vsTE: 24 },
+                'CIN': { vsQB: 28, vsRB: 26, vsWR: 29, vsTE: 25 }, 'MIA': { vsQB: 18, vsRB: 22, vsWR: 15, vsTE: 19 },
+                'ATL': { vsQB: 16, vsRB: 12, vsWR: 18, vsTE: 14 }, 'DAL': { vsQB: 20, vsRB: 24, vsWR: 21, vsTE: 22 },
+                'MIN': { vsQB: 6, vsRB: 4, vsWR: 8, vsTE: 5 }, 'DET': { vsQB: 12, vsRB: 10, vsWR: 14, vsTE: 11 },
+                'LAR': { vsQB: 15, vsRB: 14, vsWR: 16, vsTE: 17 }, 'SF': { vsQB: 7, vsRB: 6, vsWR: 9, vsTE: 8 },
+                'NYJ': { vsQB: 5, vsRB: 8, vsWR: 6, vsTE: 7 }, 'HOU': { vsQB: 9, vsRB: 11, vsWR: 7, vsTE: 10 },
+                'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 }, 'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
+                'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 }, 'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
+                'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 }, 'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
+                'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 }, 'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
+                'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 }, 'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
+                'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 }, 'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
+                'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 }, 'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
+                'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 }, 'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
+                'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 }, 'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
             };
-
-            const exactWeek11Schedule = {
-                'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
-                'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
-                'BAL': { opp: 'CAR', isHome: false, time: 'Sun 1:00 PM' }, 'CAR': { opp: 'BAL', isHome: true, time: 'Sun 1:00 PM' },
-                'NO': { opp: 'CHI', isHome: false, time: 'Sun 1:00 PM' }, 'CHI': { opp: 'NO', isHome: true, time: 'Sun 1:00 PM' },
-                'TEN': { opp: 'DAL', isHome: false, time: 'Sun 1:00 PM' }, 'DAL': { opp: 'TEN', isHome: true, time: 'Sun 1:00 PM' },
-                'TB': { opp: 'DET', isHome: false, time: 'Sun 1:00 PM' }, 'DET': { opp: 'TB', isHome: true, time: 'Sun 1:00 PM' },
-                'ARI': { opp: 'KC', isHome: false, time: 'Sun 1:00 PM' }, 'KC': { opp: 'ARI', isHome: true, time: 'Sun 1:00 PM' },
-                'PIT': { opp: 'PHI', isHome: false, time: 'Sun 1:00 PM' }, 'PHI': { opp: 'PIT', isHome: true, time: 'Sun 1:00 PM' },
-                'NYJ': { opp: 'LAC', isHome: false, time: 'Sun 4:05 PM' }, 'LAC': { opp: 'NYJ', isHome: true, time: 'Sun 4:05 PM' },
-                'JAX': { opp: 'NYG', isHome: false, time: 'Sun 4:25 PM' }, 'NYG': { opp: 'JAX', isHome: true, time: 'Sun 4:25 PM' },
-                'LV': { opp: 'DEN', isHome: false, time: 'Sun 4:25 PM' }, 'DEN': { opp: 'LV', isHome: true, time: 'Sun 4:25 PM' },
-                'MIN': { opp: 'SF', isHome: false, time: 'Sun 8:20 PM' }, 'SF': { opp: 'MIN', isHome: true, time: 'Sun 8:20 PM' },
-                'CIN': { opp: 'WAS', isHome: false, time: 'Mon 8:15 PM' }, 'WAS': { opp: 'CIN', isHome: true, time: 'Mon 8:15 PM' },
-                'ATL': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'CLE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
-                'GB': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'NE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
-                'SEA': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'LAR': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }
-            };
-
-            Object.entries(exactWeek11Schedule).forEach(([team, match]) => {
-                let venueTag = match.opp === 'BYE' ? 'BYE WEEK' : (match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`);
-                teamOpponents[team] = `${venueTag} (${match.time})`;
-                teamOpponentCode[team] = match.opp;
-            });
 
             let rawDatabase = [];
 
@@ -523,23 +514,26 @@
                 const res = await fetch('https://api.sleeper.app/v1/players/nfl');
                 const allPlayers = await res.json();
                 
-                let qbList = [];
-                let rbList = [];
-                let wrList = [];
-                let teList = [];
+                let qbList = [], rbList = [], wrList = [], teList = [];
 
                 Object.values(allPlayers).forEach(p => {
-                    if (p.active && p.team && ['QB', 'RB', 'WR', 'TE'].includes(p.position) && p.first_name && p.last_name) {
-                        let name = `${p.first_name} ${p.last_name}`;
-                        let entry = { name, pos: p.position, team: p.team };
-                        if (p.position === 'QB') qbList.push(entry);
-                        else if (p.position === 'RB') rbList.push(entry);
-                        else if (p.position === 'WR') wrList.push(entry);
-                        else if (p.position === 'TE') teList.push(entry);
+                    // STRICT ACTIVE FILTER: Must be active, have a real team, and search_rank < 400 to exclude deep practice-squad reserves
+                    if (p.active && p.team && p.first_name && p.last_name && (p.search_rank || 9999) < 400) {
+                        let pos = p.position;
+                        if (pos === 'HB' || pos === 'FB') pos = 'RB';
+                        
+                        if (['QB', 'RB', 'WR', 'TE'].includes(pos)) {
+                            let name = `${p.first_name} ${p.last_name}`;
+                            let entry = { name, pos: pos, team: p.team };
+                            if (pos === 'QB') qbList.push(entry);
+                            else if (pos === 'RB') rbList.push(entry);
+                            else if (pos === 'WR') wrList.push(entry);
+                            else if (pos === 'TE') teList.push(entry);
+                        }
                     }
                 });
 
-                // Top 20 QBs, Top 30 RBs, Top 50 WRs, Top 30 TEs with assigned projections & ranks
+                // Top 20 QBs, Top 30 RBs, Top 50 WRs, Top 30 TEs
                 qbList.slice(0, 20).forEach((p, idx) => {
                     rawDatabase.push({ ...p, baseProj: parseFloat((21.5 - (idx * 0.5)).toFixed(1)), posRank: idx + 1 });
                 });
@@ -554,9 +548,10 @@
                 });
 
             } catch (err) {
-                console.warn("Sleeper live fetch fallback engaged:", err);
+                console.warn("Sleeper live player fetch fallback engaged:", err);
             }
 
+            // Fallback safety net if offline
             if (rawDatabase.length === 0) {
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
@@ -570,11 +565,12 @@
             }
 
             // All 32 NFL Defenses
-            const nflTeamsList = Object.keys(exactWeek11Schedule);
+            const allTeams = Object.keys(defensiveMatchupRatings);
             let defRankCounter = 0;
-            nflTeamsList.forEach(teamCode => {
+            allTeams.forEach(teamCode => {
                 defRankCounter++;
-                let isBye = exactWeek11Schedule[teamCode].opp === 'BYE';
+                let oppCode = teamOpponentCode[teamCode];
+                let isBye = !oppCode;
                 rawDatabase.push({
                     name: `${teamCode} Defense`,
                     pos: 'DEF',
@@ -586,11 +582,11 @@
 
             playerPool = rawDatabase.map(p => {
                 let oppCode = teamOpponentCode[p.team];
-                let isBye = oppCode === 'BYE';
+                let isBye = !oppCode;
                 let defRanks = !isBye && oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
                 let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : p.pos === 'RB' ? defRanks.vsRB : p.pos === 'WR' ? defRanks.vsWR : p.pos === 'TE' ? defRanks.vsTE : 16;
                 let salary = isBye ? 3000 : convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
-                let oppTag = teamOpponents[p.team] || 'vs OPP (Sun 1:00 PM)';
+                let oppTag = teamOpponents[p.team] || 'BYE WEEK';
                 let grade = isBye ? '🛑 BYE WEEK' : (defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot');
 
                 return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
@@ -1040,7 +1036,7 @@
         function renderStandingsFallback() {
             const tbody = document.getElementById('standings-tbody');
             if (!tbody) return;
-            tbody.innerHTML = '';
+            tbody.innerHTML = .length === 0;
 
             if (registeredTeams.length > 0) {
                 registeredTeams.forEach((t, idx) => {
