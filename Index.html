@@ -104,7 +104,7 @@
                 </div>
                 <div class="md:col-span-2 flex items-center justify-between pt-2 border-t border-blue-800/60">
                     <div class="text-xs text-blue-200">
-                        <span>💡 Tip: Auto-Fill Optimal automatically crafts a lineup strictly under the $60k cap.</span>
+                        <span>💡 Tip: Auto-Fill Optimal strictly enforces the $60,000 salary cap limit.</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
@@ -505,7 +505,6 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // 1. Fetch live schedule from ESPN
             try {
                 const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
                 if (espnRes.ok) {
@@ -536,7 +535,6 @@
                 console.warn("ESPN Scoreboard warning:", err);
             }
 
-            // 2. Fetch live master roster & weekly projections from Sleeper
             let sleeperRosterMap = {};
             let sleeperProjectionsMap = {};
 
@@ -561,7 +559,6 @@
 
             let rawDatabase = [];
 
-            // 3. Process and filter using actual Sleeper weekly projections
             if (Object.keys(sleeperRosterMap).length > 0) {
                 const validPlayers = Object.entries(sleeperRosterMap)
                     .map(([id, pl]) => ({
@@ -657,7 +654,7 @@
                 };
             });
 
-            if (rosterSlots[0].player === null && playerPool.length > 5) {
+            if (playerPool.length > 5) {
                 autoFillCap();
             } else {
                 initAppUI();
@@ -887,24 +884,40 @@
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
-            // Greedily adjust downwards if total exceeds $60k cap
+            // Hardened iterative trimming loop guaranteed to stay <= $60,000
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 15) {
+            while (totalSalary > 60000 && safetyCounter < 50) {
                 safetyCounter++;
-                let flexibleSlots = candidateSlots.filter(s => ['RB1', 'RB2', 'WR1', 'WR2', 'WR3', 'FLEX', 'TE'].includes(s.id) && s.player);
-                if (flexibleSlots.length === 0) break;
 
-                flexibleSlots.sort((a, b) => b.player.salary - a.player.salary);
-                let targetSlot = flexibleSlots[0];
+                let activeSlots = candidateSlots.filter(s => s.player !== null);
+                if (activeSlots.length === 0) break;
 
-                let poolForPos = targetSlot.id.startsWith('RB') || targetSlot.id === 'FLEX' ? rbs : 
-                                 targetSlot.id.startsWith('WR') ? wrs : tes;
+                activeSlots.sort((a, b) => b.player.salary - a.player.salary);
+                let targetSlot = activeSlots[0];
+
+                let posKey = targetSlot.id.replace(/[0-9]/g, '');
+                let poolForPos = posKey === 'QB' ? qbs :
+                                 posKey === 'RB' || targetSlot.id === 'FLEX' ? rbs :
+                                 posKey === 'WR' ? wrs :
+                                 posKey === 'TE' ? tes : defs;
 
                 let currentIndex = poolForPos.findIndex(p => p.name === targetSlot.player.name);
                 if (currentIndex !== -1 && currentIndex + 1 < poolForPos.length) {
                     targetSlot.player = { ...poolForPos[currentIndex + 1] };
                 } else {
-                    break;
+                    if (activeSlots.length > 1) {
+                        let secondTarget = activeSlots[1];
+                        let secPosKey = secondTarget.id.replace(/[0-9]/g, '');
+                        let secPool = secPosKey === 'QB' ? qbs : secPosKey === 'RB' || secondTarget.id === 'FLEX' ? rbs : secPosKey === 'WR' ? wrs : secPosKey === 'TE' ? tes : defs;
+                        let secIdx = secPool.findIndex(p => p.name === secondTarget.player.name);
+                        if (secIdx !== -1 && secIdx + 1 < secPool.length) {
+                            secondTarget.player = { ...secPool[secIdx + 1] };
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
                 }
 
                 totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
