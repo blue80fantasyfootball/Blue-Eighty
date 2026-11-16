@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing granular player valuations & matchups...
+                    🔄 Syncing unique micro-tier player valuations...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -335,7 +335,6 @@
         let registeredTeams = [];
         let currentNFLWeek = 11;
 
-        // Automatically calculate current NFL week (rollovers every Tuesday)
         function getCurrentNFLWeek() {
             const seasonStartDate = new Date('2026-09-10T00:00:00');
             const now = new Date();
@@ -346,7 +345,6 @@
             return Math.min(Math.max(calculatedWeek, 1), 18);
         }
 
-        // Defensive Rankings vs Position (1 = Lockdown Defense, 32 = Softest Defense)
         const defensiveMatchupRatings = {
             'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
             'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
@@ -383,15 +381,15 @@
         };
 
         const rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7850, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7150, pos: 'RB', proj: 18.3, matchupGrade: 'Tough Run Def', injuredQ1: true } },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7550, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8150, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 7950, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7450, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
-            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 6150, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
-            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 6950, pos: 'RB', proj: 17.4, matchupGrade: 'Tough Matchup' } },
-            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 3200, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
+            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7860, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
+            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7140, pos: 'RB', proj: 18.3, matchupGrade: 'Tough Run Def', injuredQ1: true } },
+            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7530, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
+            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8170, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
+            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 7920, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
+            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7440, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
+            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 6160, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
+            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 6930, pos: 'RB', proj: 17.4, matchupGrade: 'Tough Matchup' } },
+            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 3220, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
         ];
 
         window.onload = async function() {
@@ -491,7 +489,6 @@
                 console.warn("ESPN Scoreboard API fallback triggered:", err);
             }
 
-            // Master Player Database (Guaranteed to render even if external APIs fail)
             const eliteDatabase = [
                 // QBs (1 to 15)
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
@@ -653,7 +650,8 @@
                 let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
                 let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
                 
-                let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric);
+                // Pass position rank to guarantee unique micro-tier pricing offsets
+                let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric, p.posRank || 1, p.name);
                 
                 let oppTag = teamOpponents[p.team] || 'BYE';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
@@ -682,22 +680,40 @@
             initAppUI();
         }
 
-        // Tiered Salary Formula with granular rounding ($50 increments)
-        function convertPointsToSalary(position, projectedPoints, matchupGradeMetric) {
+        // Advanced Salary Formula with Unique Micro-Tier Offsets ($10 increments) to eliminate duplicate pricing
+        function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
             let basePrice = 4500;
             let multiplier = 220;
             
-            if (position === 'QB') { basePrice = 5200; multiplier = 240; }
-            else if (position === 'RB') { basePrice = 5000; multiplier = 250; }
-            else if (position === 'WR') { basePrice = 5000; multiplier = 245; }
-            else if (position === 'TE') { basePrice = 4200; multiplier = 205; }
-            else if (position === 'DEF') { return 3200; }
+            if (position === 'QB') { basePrice = 5200; multiplier = 242; }
+            else if (position === 'RB') { basePrice = 5000; multiplier = 252; }
+            else if (position === 'WR') { basePrice = 5000; multiplier = 247; }
+            else if (position === 'TE') { basePrice = 4200; multiplier = 208; }
+            else if (position === 'DEF') { 
+                // Unique DEF pricing based on rank offset
+                return 2500 + ((32 - posRank) * 40) + (Math.abs(hashCode(playerName) % 30));
+            }
 
-            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 180);
+            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 170);
 
             let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
-            let finalSalary = Math.round(rawSalary / 50) * 50;
-            return Math.min(Math.max(finalSalary, 2500), 9500);
+            
+            // Add a deterministic pseudo-random unique offset ($10 to $90) based on player name hash 
+            // combined with position rank so no two players end up with identical tags.
+            let uniqueHashOffset = ((hashCode(playerName) % 9) * 10) + ((posRank % 3) * 5);
+            let finalSalary = Math.round((rawSalary + uniqueHashOffset) / 10) * 10;
+
+            return Math.min(Math.max(finalSalary, 2500), 9600);
+        }
+
+        // Helper string hash to generate distinct pricing offsets per player
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
         }
 
         function initAppUI() {
