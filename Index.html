@@ -521,6 +521,7 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
+            // Accurate Week 11 matchup matrix (IND@HOU, MIA@BUF, BAL@CAR, NO@CHI, TEN@DAL, TB@DET, ARI@KC, PIT@PHI, NYJ@LAC, JAX@NYG, LV@DEN, MIN@SF, CIN@WAS, NE@ATL, SEA@LAR)
             const fallbackMatchupsWeek11 = {
                 'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
                 'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
@@ -537,11 +538,11 @@
                 'CIN': { opp: 'WAS', isHome: false, time: 'Mon 8:15 PM' }, 'WAS': { opp: 'CIN', isHome: true, time: 'Mon 8:15 PM' },
                 'NE': { opp: 'ATL', isHome: true, time: 'Sun 1:00 PM' }, 'ATL': { opp: 'NE', isHome: false, time: 'Sun 1:00 PM' },
                 'SEA': { opp: 'LAR', isHome: true, time: 'Sun 4:05 PM' }, 'LAR': { opp: 'SEA', isHome: false, time: 'Sun 4:05 PM' },
-                'GB': { opp: 'DET', isHome: true, time: 'Sun 1:00 PM' }, 'CLE': { opp: 'CIN', isHome: true, time: 'Sun 1:00 PM' }
+                'GB': { opp: 'BYE', isHome: true, time: 'Bye Week' }, 'CLE': { opp: 'BYE', isHome: true, time: 'Bye Week' }
             };
 
             Object.entries(fallbackMatchupsWeek11).forEach(([team, match]) => {
-                let venueTag = match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`;
+                let venueTag = match.opp === 'BYE' ? 'BYE WEEK' : (match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`);
                 teamOpponents[team] = `${venueTag} (${match.time})`;
                 teamOpponentCode[team] = match.opp;
             });
