@@ -185,11 +185,11 @@
                     </div>
                     <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                         <button onclick="filterPos('ALL')" id="pos-btn-ALL" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition">All</button>
-                        <button onclick="filterPos('QB')" id="pos-btn-QB" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">QB (15)</button>
-                        <button onclick="filterPos('RB')" id="pos-btn-RB" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">RB (25)</button>
-                        <button onclick="filterPos('WR')" id="pos-btn-WR" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">WR (40)</button>
-                        <button onclick="filterPos('TE')" id="pos-btn-TE" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">TE (25)</button>
-                        <button onclick="filterPos('DEF')" id="pos-btn-DEF" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">DEF (32)</button>
+                        <button onclick="filterPos('QB')" id="pos-btn-QB" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">QB</button>
+                        <button onclick="filterPos('RB')" id="pos-btn-RB" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">RB</button>
+                        <button onclick="filterPos('WR')" id="pos-btn-WR" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">WR</button>
+                        <button onclick="filterPos('TE')" id="pos-btn-TE" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">TE</button>
+                        <button onclick="filterPos('DEF')" id="pos-btn-DEF" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">DEF</button>
                     </div>
                 </div>
 
@@ -380,24 +380,24 @@
             'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
         };
 
-        const rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs ARI', salary: 7860, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7530, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Christian McCaffrey', team: 'SF', opponent: 'vs MIN', salary: 8120, pos: 'RB', proj: 19.4, matchupGrade: 'Lockdown Def' } },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs TEN', salary: 8170, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ SF', salary: 7920, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs TB', salary: 7440, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
-            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs ARI', salary: 6160, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
-            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 6930, pos: 'RB', proj: 17.4, matchupGrade: 'Tough Matchup' } },
-            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs MIN', salary: 4850, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
+        let rosterSlots = [
+            { id: 'QB', label: 'Quarterback (QB)', player: null },
+            { id: 'RB1', label: 'Running Back 1 (RB)', player: null },
+            { id: 'RB2', label: 'Running Back 2 (RB)', player: null },
+            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: null },
+            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: null },
+            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: null },
+            { id: 'TE', label: 'Tight End (TE)', player: null },
+            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: null },
+            { id: 'DEF', label: 'Defense / Special Teams', player: null }
         ];
 
         window.onload = async function() {
             currentNFLWeek = getCurrentNFLWeek();
             document.getElementById('current-slate-label').innerText = `Week ${currentNFLWeek} Slate`;
             
-            renderLineup();
             await initSupabaseLeague();
+            // Await live Sleeper and ESPN data BEFORE rendering any UI
             await loadLiveSleeperAndESPNData(currentNFLWeek);
         };
 
@@ -459,13 +459,13 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // 1. Fetch live schedule from ESPN to know matchups and Bye weeks
+            // 1. Fetch live schedule from ESPN
             try {
                 const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
                 if (espnRes.ok) {
                     const espnData = await espnRes.json();
                     if (espnData && espnData.events) {
-                        espnData.events.events.forEach || espnData.events.forEach(event => {
+                        espnData.events.forEach(event => {
                             const competition = event.competitions[0];
                             if (competition && competition.competitors) {
                                 let homeTeam = '';
@@ -503,7 +503,6 @@
 
             let rawDatabase = [];
 
-            // If Sleeper responded successfully, build dynamic player pool from it
             if (Object.keys(sleeperRosterMap).length > 0) {
                 let qbCount = 0, rbCount = 0, wrCount = 0, teCount = 0;
                 
@@ -512,7 +511,6 @@
                         let pos = pl.position;
                         let team = pl.team || 'FA';
                         
-                        // Assign sensible baseline projections based on position & activity
                         let baseProj = pos === 'QB' ? 16.0 : pos === 'RB' ? 13.5 : pos === 'WR' ? 12.5 : 10.0;
                         if (pl.search_rank && pl.search_rank < 300) {
                             baseProj += Math.max(0, (300 - pl.search_rank) / 30);
@@ -521,7 +519,7 @@
 
                         // Filter out players on Bye week
                         let opp = teamOpponents[team];
-                        if (!opp) continue; // Skip players on BYE or missing game data
+                        if (!opp) continue; 
 
                         if (pos === 'QB' && qbCount < 20) { qbCount++; rawDatabase.push({ name: pl.full_name, pos: 'QB', team: team, baseProj: baseProj, posRank: qbCount }); }
                         else if (pos === 'RB' && rbCount < 35) { rbCount++; rawDatabase.push({ name: pl.full_name, pos: 'RB', team: team, baseProj: baseProj, posRank: rbCount }); }
@@ -531,7 +529,6 @@
                 }
             }
 
-            // Fallback curated elite database if API is throttled or offline
             if (rawDatabase.length < 30) {
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
@@ -559,7 +556,7 @@
             const nflTeamsList = ['SF', 'MIN', 'PIT', 'DEN', 'HOU', 'BAL', 'KC', 'BUF', 'NYJ', 'PHI', 'GB', 'CHI', 'SEA', 'LAC', 'CLE', 'DAL', 'DET', 'MIA', 'TB', 'CIN', 'ATL', 'IND', 'WAS', 'ARI', 'NE', 'NYG', 'LV', 'LAR', 'NO', 'CAR', 'TEN', 'JAX'];
             nflTeamsList.forEach((teamCode, idx) => {
                 let opp = teamOpponents[teamCode];
-                if (opp) { // Only include defenses not on Bye week
+                if (opp) {
                     rawDatabase.push({
                         name: `${teamCode} Defense`,
                         pos: 'DEF',
@@ -596,32 +593,24 @@
                 };
             });
 
-            // Filter out any players or roster slots currently assigned to a Bye week team
-            rosterSlots.forEach(slot => {
-                if (slot.player) {
-                    const matched = playerPool.find(p => p.name.toLowerCase() === slot.player.name.toLowerCase());
-                    if (!matched || matched.opponent === 'BYE') {
-                        // Automatically replace with next best available healthy player at that position
-                        const replacement = playerPool.find(p => p.pos === slot.id.replace(/[0-9]/g, '') || (slot.id === 'FLEX' && ['RB', 'WR', 'TE'].includes(p.pos)));
-                        if (replacement) {
-                            slot.player = { ...replacement };
-                        }
-                    } else {
-                        slot.player.opponent = matched.opponent;
-                        slot.player.proj = matched.proj;
-                        slot.player.salary = matched.salary;
-                        slot.player.matchupGrade = matched.matchupGrade;
-                    }
-                }
-            });
+            // Populate initial starting lineup automatically if empty
+            if (rosterSlots[0].player === null && playerPool.length > 5) {
+                rosterSlots[0].player = { ...playerPool.find(p => p.pos === 'QB') } || null;
+                rosterSlots[1].player = { ...playerPool.find(p => p.pos === 'RB') } || null;
+                rosterSlots[2].player = { ...playerPool.filter(p => p.pos === 'RB')[1] } || null;
+                rosterSlots[3].player = { ...playerPool.find(p => p.pos === 'WR') } || null;
+                rosterSlots[4].player = { ...playerPool.filter(p => p.pos === 'WR')[1] } || null;
+                rosterSlots[5].player = { ...playerPool.filter(p => p.pos === 'WR')[2] } || null;
+                rosterSlots[6].player = { ...playerPool.find(p => p.pos === 'TE') } || null;
+                rosterSlots[7].player = { ...playerPool.filter(p => p.pos === 'RB')[2] } || null;
+                rosterSlots[8].player = { ...playerPool.find(p => p.pos === 'DEF') } || null;
+            }
 
             initAppUI();
         }
 
-        // Advanced Salary Formula with strict $3,000–$6,000 Defense range and unique micro-tier offsets ($10 increments)
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
             if (position === 'DEF') {
-                // Strict Defense range between $3,000 and $6,000 based on rank and unique hash offset
                 let baseDefPrice = 3000 + ((32 - posRank) * 80);
                 let defOffset = Math.abs(hashCode(playerName) % 350);
                 return Math.min(Math.max(Math.round((baseDefPrice + defOffset) / 10) * 10, 3000), 6000);
@@ -811,15 +800,15 @@
 
         function autoFillCap() {
             if (playerPool.length > 5) {
-                rosterSlots[0].player = playerPool.find(p => p.pos === 'QB') || rosterSlots[0].player;
-                rosterSlots[1].player = playerPool.find(p => p.pos === 'RB') || rosterSlots[1].player;
-                rosterSlots[2].player = playerPool.filter(p => p.pos === 'RB')[1] || rosterSlots[2].player;
-                rosterSlots[3].player = playerPool.find(p => p.pos === 'WR') || rosterSlots[0].player;
-                rosterSlots[4].player = playerPool.filter(p => p.pos === 'WR')[1] || rosterSlots[4].player;
-                rosterSlots[5].player = playerPool.filter(p => p.pos === 'WR')[2] || rosterSlots[5].player;
-                rosterSlots[6].player = playerPool.find(p => p.pos === 'TE') || rosterSlots[6].player;
-                rosterSlots[7].player = playerPool.filter(p => p.pos === 'RB')[2] || rosterSlots[7].player;
-                rosterSlots[8].player = playerPool.find(p => p.pos === 'DEF') || rosterSlots[8].player;
+                rosterSlots[0].player = { ...playerPool.find(p => p.pos === 'QB') } || rosterSlots[0].player;
+                rosterSlots[1].player = { ...playerPool.find(p => p.pos === 'RB') } || rosterSlots[1].player;
+                rosterSlots[2].player = { ...playerPool.filter(p => p.pos === 'RB')[1] } || rosterSlots[2].player;
+                rosterSlots[3].player = { ...playerPool.find(p => p.pos === 'WR') } || rosterSlots[3].player;
+                rosterSlots[4].player = { ...playerPool.filter(p => p.pos === 'WR')[1] } || rosterSlots[4].player;
+                rosterSlots[5].player = { ...playerPool.filter(p => p.pos === 'WR')[2] } || rosterSlots[5].player;
+                rosterSlots[6].player = { ...playerPool.find(p => p.pos === 'TE') } || rosterSlots[6].player;
+                rosterSlots[7].player = { ...playerPool.filter(p => p.pos === 'RB')[2] } || rosterSlots[7].player;
+                rosterSlots[8].player = { ...playerPool.find(p => p.pos === 'DEF') } || rosterSlots[8].player;
             }
             isQ1InjuredActive = false;
             document.getElementById('injury-banner').classList.add('hidden');
