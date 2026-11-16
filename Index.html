@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing live automatic weekly schedule & player injuries...
+                    🔄 Syncing live automatic weekly schedule & player salaries...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -309,8 +309,8 @@
                     <span class="font-bold text-slate-900 mono-num" id="bio-salary">$0</span>
                 </div>
                 <div class="flex justify-between py-1.5">
-                    <span class="text-slate-500 font-medium">Injury Status:</span>
-                    <span class="font-bold text-emerald-600" id="bio-injury">Healthy</span>
+                    <span class="text-slate-500 font-medium">Status:</span>
+                    <span class="font-bold text-emerald-600" id="bio-injury">Healthy (Active)</span>
                 </div>
             </div>
             <div class="pt-2">
@@ -400,7 +400,7 @@
             
             renderLineup();
             await initSupabaseLeague();
-            await loadLiveESPNAndSleeperData(currentNFLWeek);
+            await loadLiveESPNData(currentNFLWeek);
         };
 
         async function initSupabaseLeague() {
@@ -453,13 +453,11 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadLiveESPNAndSleeperData(weekNum) {
+        async function loadLiveESPNData(weekNum) {
             teamOpponents = {};
             let teamOpponentCode = {};
-            let injuryMap = {};
 
             try {
-                // Fetch weekly matchups from ESPN public scoreboard API
                 const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
                 const espnData = await espnRes.json();
                 
@@ -486,23 +484,6 @@
                 }
             } catch (err) {
                 console.warn("ESPN Scoreboard API warning:", err);
-            }
-
-            try {
-                // Fetch live Sleeper player dataset for accurate injury flags (e.g. Achane, Chubb, IR tags)
-                const sleeperRes = await fetch('https://api.sleeper.app/v1/players/nfl');
-                const sleeperData = await sleeperRes.ok ? await sleeperRes.json() : {};
-                
-                for (const [id, pl] of Object.entries(sleeperData)) {
-                    if (pl.full_name) {
-                        let status = pl.injury_status || pl.status;
-                        if (status && status !== 'Active') {
-                            injuryMap[pl.full_name.toLowerCase()] = status;
-                        }
-                    }
-                }
-            } catch (err) {
-                console.warn("Sleeper injury fetch warning:", err);
             }
 
             // Exactly configured position database: Top 15 QBs, Top 25 RBs, Top 40 WRs, Top 25 TEs, All 32 DEFs
@@ -666,20 +647,19 @@
 
                 let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
                 let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
-                let salary = convertPointsToSalary(p.pos, adjustedProj);
+                
+                // Dynamically scale salary based on talent tier AND defensive matchup strength
+                let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric);
                 
                 let oppTag = teamOpponents[p.team] || 'BYE';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
-
-                let injuryStatus = injuryMap[p.name.toLowerCase()] || null;
 
                 return {
                     ...p,
                     opponent: oppTag,
                     proj: adjustedProj,
                     salary: salary,
-                    matchupGrade: grade,
-                    injuryStatus: injuryStatus
+                    matchupGrade: grade
                 };
             });
 
@@ -691,7 +671,6 @@
                         slot.player.proj = matched.proj;
                         slot.player.salary = matched.salary;
                         slot.player.matchupGrade = matched.matchupGrade;
-                        slot.player.injuryStatus = matched.injuryStatus;
                     }
                 }
             });
@@ -699,8 +678,8 @@
             initAppUI();
         }
 
-        // Tiered Elite Salary Formula ($7,000 to $9,000 range for top studs)
-        function convertPointsToSalary(position, projectedPoints) {
+        // Tiered Elite Salary Formula ($7k - $9k range for elites, factoring in matchup strength)
+        function convertPointsToSalary(position, projectedPoints, matchupGradeMetric) {
             let basePrice = 4500;
             let multiplier = 220;
             
@@ -710,7 +689,10 @@
             else if (position === 'TE') { basePrice = 4200; multiplier = 200; }
             else if (position === 'DEF') { return 3200; }
 
-            let rawSalary = basePrice + (projectedPoints * multiplier);
+            // Matchup adjustment: soft defenses boost price, lockdown defenses discount it
+            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 200);
+
+            let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
             let finalSalary = Math.round(rawSalary / 100) * 100;
             return Math.min(Math.max(finalSalary, 2500), 9500);
         }
@@ -745,9 +727,6 @@
                 else emptySlots++;
 
                 const isInjuredQ1 = slot.player && slot.player.injuredQ1 && isQ1InjuredActive;
-                const injuryBadge = slot.player && slot.player.injuryStatus ? 
-                    `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full cursor-pointer hover:bg-red-200 uppercase" onclick="openBioModal('${slot.player.name}')">🏥 ${slot.player.injuryStatus}</span>` : '';
-                
                 const oppText = slot.player && slot.player.opponent === 'BYE' ? 
                     `<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">BYE WEEK</span>` : 
                     (slot.player ? `${slot.player.team} (${slot.player.opponent})` : '');
@@ -762,7 +741,6 @@
                                         <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${slot.player.name}')">${slot.player.name}</p>
                                         <span class="text-xs font-semibold text-slate-500">${oppText}</span>
                                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${slot.player.matchupGrade || 'Neutral'}</span>
-                                        ${injuryBadge}
                                         ${isInjuredQ1 ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">🛡️ Q1 INJURED</span>` : ''}
                                     </div>
                                     <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Adjusted Proj: ${slot.player.proj} pts</p>
@@ -832,7 +810,6 @@
             document.getElementById('bio-matchup-grade').innerText = player.matchupGrade || 'Neutral Spot';
             document.getElementById('bio-proj').innerText = `${player.proj} pts`;
             document.getElementById('bio-salary').innerText = `$${(player.salary || 5000).toLocaleString()}`;
-            document.getElementById('bio-injury').innerText = player.injuryStatus ? `Status: ${player.injuryStatus}` : 'Healthy (Active)';
 
             document.getElementById('bio-modal').classList.remove('hidden');
         }
@@ -854,18 +831,17 @@
 
             filtered.forEach(p => {
                 const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold">BYE</span>' : p.opponent;
-                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-1 uppercase cursor-pointer" onclick="openBioModal('${p.name}')">🏥 ${p.injuryStatus}</span>` : '';
 
                 list.innerHTML += `
                     <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
                         <div class="flex items-center space-x-3">
                             <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${p.posRank || 1}</span>
                             <div>
-                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span> ${injuryTag}</p>
+                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span></p>
                                 <p class="text-xs text-slate-500"><span class="text-indigo-600 font-bold">${p.matchupGrade}</span> • Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
                             </div>
                         </div>
-                        <button onclick="confirmSwap('${p.name}', '${p.pos}', '${p.team}', '${p.opponent}', ${p.salary}, ${p.proj}, '${p.matchupGrade}', '${p.injuryStatus || ''}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition">
+                        <button onclick="confirmSwap('${p.name}', '${p.pos}', '${p.team}', '${p.opponent}', ${p.salary}, ${p.proj}, '${p.matchupGrade}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition">
                             Draft
                         </button>
                     </div>
@@ -873,9 +849,9 @@
             });
         }
 
-        function confirmSwap(name, pos, team, opponent, salary, proj, matchupGrade, injuryStatus) {
+        function confirmSwap(name, pos, team, opponent, salary, proj, matchupGrade) {
             if (targetSlotIndex !== null) {
-                rosterSlots[targetSlotIndex].player = { name, pos, team, opponent, salary, proj, matchupGrade, injuryStatus: injuryStatus || null };
+                rosterSlots[targetSlotIndex].player = { name, pos, team, opponent, salary, proj, matchupGrade };
             }
             closeModal();
             renderLineup();
@@ -929,7 +905,6 @@
 
             filtered.forEach(p => {
                 const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">BYE</span>' : `<span class="text-blue-600">${p.opponent}</span>`;
-                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2 uppercase cursor-pointer" onclick="openBioModal('${p.name}')">🏥 ${p.injuryStatus}</span>` : '';
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
@@ -937,8 +912,7 @@
                         <td class="py-3 px-4 font-bold text-slate-900">
                             <span class="cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name}</span> 
                             <span class="text-xs font-semibold text-slate-500">(${p.team} ${opp})</span> 
-                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span> 
-                            ${injuryTag}
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span>
                         </td>
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
                         <td class="py-3 px-4 mono-num font-bold text-slate-800">$${p.salary.toLocaleString()}</td>
@@ -992,9 +966,9 @@
 
         function simulateLivePlay() {
             const tickers = [
-                "Sleeper API Injury Feed: Verified active status & injury designations synced across all teams.",
-                "Sleeper API Feed: Mahomes 24-yard deep pass to CeeDee Lamb for a TOUCHDOWN! (+8.4 pts)",
-                "Sleeper API Feed: Bijan Robinson rushes up the middle for 18 yards and a First Down!"
+                "Schedule API Feed: Live game matchups & defensive ratings active for Week " + currentNFLWeek + ".",
+                "GameCast: Mahomes 24-yard deep pass to CeeDee Lamb for a TOUCHDOWN! (+8.4 pts)",
+                "GameCast: Bijan Robinson rushes up the middle for 18 yards and a First Down!"
             ];
             document.getElementById('live-ticker-text').innerText = tickers[Math.floor(Math.random() * tickers.length)];
         }
