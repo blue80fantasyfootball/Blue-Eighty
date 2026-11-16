@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing live automatic weekly schedule & player salaries...
+                    🔄 Syncing granular player valuations & matchups...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -383,15 +383,15 @@
         };
 
         const rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7800, pos: 'QB', proj: 22.1, matchupGrade: 'Neutral Matchup' } },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7200, pos: 'RB', proj: 18.2, matchupGrade: 'Tough Run Def', injuredQ1: true } },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7500, pos: 'RB', proj: 19.4, matchupGrade: 'Soft Run Def' } },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8100, pos: 'WR', proj: 21.5, matchupGrade: 'Elite Matchup' } },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 8000, pos: 'WR', proj: 20.2, matchupGrade: 'Neutral Matchup' } },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7400, pos: 'WR', proj: 19.8, matchupGrade: 'Favorable Pass Def' } },
-            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 6200, pos: 'TE', proj: 14.5, matchupGrade: 'Neutral Matchup' } },
-            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 7000, pos: 'RB', proj: 17.5, matchupGrade: 'Tough Matchup' } },
-            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 3200, pos: 'DEF', proj: 10.0, matchupGrade: 'Solid Spot' } }
+            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7850, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
+            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7150, pos: 'RB', proj: 18.3, matchupGrade: 'Tough Run Def', injuredQ1: true } },
+            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7550, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
+            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8150, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
+            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 7950, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
+            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7450, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
+            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 6150, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
+            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 6950, pos: 'RB', proj: 17.4, matchupGrade: 'Tough Matchup' } },
+            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 3200, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
         ];
 
         window.onload = async function() {
@@ -486,154 +486,154 @@
                 console.warn("ESPN Scoreboard API warning:", err);
             }
 
-            // Exactly configured position database: Top 15 QBs, Top 25 RBs, Top 40 WRs, Top 25 TEs, All 32 DEFs
+            // Granular baseline projections with fine fractional variance so salaries spread out evenly
             const eliteDatabase = [
                 // QBs (1 to 15)
-                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.0, posRank: 1 },
-                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.0, posRank: 2 },
-                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.5, posRank: 3 },
-                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.0, posRank: 4 },
-                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.5, posRank: 5 },
-                { name: 'Baker Mayfield', pos: 'QB', team: 'TB', baseProj: 19.0, posRank: 6 },
-                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 18.8, posRank: 7 },
-                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.2, posRank: 8 },
-                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.8, posRank: 9 },
-                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.5, posRank: 10 },
-                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 17.2, posRank: 11 },
-                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 17.0, posRank: 12 },
-                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 16.8, posRank: 13 },
-                { name: 'Anthony Richardson', pos: 'QB', team: 'IND', baseProj: 16.5, posRank: 14 },
-                { name: 'Trevor Lawrence', pos: 'QB', team: 'JAX', baseProj: 16.2, posRank: 15 },
+                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
+                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.1, posRank: 2 },
+                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.8, posRank: 3 },
+                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.2, posRank: 4 },
+                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.4, posRank: 5 },
+                { name: 'Baker Mayfield', pos: 'QB', team: 'TB', baseProj: 19.3, posRank: 6 },
+                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 18.7, posRank: 7 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 8 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.6, posRank: 9 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.2, posRank: 10 },
+                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.9, posRank: 11 },
+                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.5, posRank: 12 },
+                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 16.1, posRank: 13 },
+                { name: 'Anthony Richardson', pos: 'QB', team: 'IND', baseProj: 15.7, posRank: 14 },
+                { name: 'Trevor Lawrence', pos: 'QB', team: 'JAX', baseProj: 15.3, posRank: 15 },
 
                 // RBs (1 to 25)
-                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.5, posRank: 1 },
-                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.5, posRank: 2 },
-                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 17.0, posRank: 3 },
-                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.0, posRank: 4 },
-                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.8, posRank: 5 },
-                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.8, posRank: 6 },
-                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.0, posRank: 7 },
-                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.0, posRank: 8 },
-                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 9 },
-                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 15.2, posRank: 10 },
-                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 14.8, posRank: 11 },
-                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 14.5, posRank: 12 },
-                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 14.2, posRank: 13 },
-                { name: 'Travis Etienne Jr.', pos: 'RB', team: 'JAX', baseProj: 13.9, posRank: 14 },
-                { name: 'Isiah Pacheco', pos: 'RB', team: 'KC', baseProj: 13.6, posRank: 15 },
-                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 13.4, posRank: 16 },
-                { name: 'Rhamondre Stevenson', pos: 'RB', team: 'NE', baseProj: 13.1, posRank: 17 },
-                { name: 'David Montgomery', pos: 'RB', team: 'DET', baseProj: 12.8, posRank: 18 },
-                { name: 'Tony Pollard', pos: 'RB', team: 'TEN', baseProj: 12.5, posRank: 19 },
-                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.2, posRank: 20 },
-                { name: 'Brian Robinson Jr.', pos: 'RB', team: 'WAS', baseProj: 12.0, posRank: 21 },
-                { name: 'Najee Harris', pos: 'RB', team: 'PIT', baseProj: 11.8, posRank: 22 },
-                { name: 'J.K. Dobbins', pos: 'RB', team: 'LAC', baseProj: 11.5, posRank: 23 },
-                { name: 'Aaron Jones', pos: 'RB', team: 'MIN', baseProj: 11.2, posRank: 24 },
-                { name: 'Zack Moss', pos: 'RB', team: 'CIN', baseProj: 11.0, posRank: 25 },
+                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.6, posRank: 2 },
+                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.2, posRank: 3 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.7, posRank: 4 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.3, posRank: 5 },
+                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 16.8, posRank: 6 },
+                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.4, posRank: 7 },
+                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 15.9, posRank: 8 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.5, posRank: 9 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 15.1, posRank: 10 },
+                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 14.6, posRank: 11 },
+                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 14.2, posRank: 12 },
+                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 13.8, posRank: 13 },
+                { name: 'Travis Etienne Jr.', pos: 'RB', team: 'JAX', baseProj: 13.5, posRank: 14 },
+                { name: 'Isiah Pacheco', pos: 'RB', team: 'KC', baseProj: 13.1, posRank: 15 },
+                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.8, posRank: 16 },
+                { name: 'Rhamondre Stevenson', pos: 'RB', team: 'NE', baseProj: 12.4, posRank: 17 },
+                { name: 'David Montgomery', pos: 'RB', team: 'DET', baseProj: 12.1, posRank: 18 },
+                { name: 'Tony Pollard', pos: 'RB', team: 'TEN', baseProj: 11.7, posRank: 19 },
+                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 11.4, posRank: 20 },
+                { name: 'Brian Robinson Jr.', pos: 'RB', team: 'WAS', baseProj: 11.1, posRank: 21 },
+                { name: 'Najee Harris', pos: 'RB', team: 'PIT', baseProj: 10.7, posRank: 22 },
+                { name: 'J.K. Dobbins', pos: 'RB', team: 'LAC', baseProj: 10.4, posRank: 23 },
+                { name: 'Aaron Jones', pos: 'RB', team: 'MIN', baseProj: 10.1, posRank: 24 },
+                { name: 'Zack Moss', pos: 'RB', team: 'CIN', baseProj: 9.8, posRank: 25 },
 
-                // WRs (1 to 40)
-                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.0, posRank: 1 },
-                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.2, posRank: 2 },
-                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.8, posRank: 3 },
-                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.8, posRank: 4 },
-                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.5, posRank: 5 },
-                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 17.5, posRank: 6 },
-                { name: 'Malik Nabers', pos: 'WR', team: 'NYG', baseProj: 17.0, posRank: 7 },
-                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 16.5, posRank: 8 },
-                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.2, posRank: 9 },
-                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.8, posRank: 10 },
-                { name: 'Davante Adams', pos: 'WR', team: 'NYJ', baseProj: 15.5, posRank: 11 },
-                { name: 'Mike Evans', pos: 'WR', team: 'TB', baseProj: 15.2, posRank: 12 },
-                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 13 },
-                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.8, posRank: 14 },
-                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.5, posRank: 15 },
-                { name: 'Cooper Kupp', pos: 'WR', team: 'LAR', baseProj: 14.2, posRank: 16 },
-                { name: 'Puka Nacua', pos: 'WR', team: 'LAR', baseProj: 16.0, posRank: 17 },
-                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 14.0, posRank: 18 },
-                { name: 'DK Metcalf', pos: 'WR', team: 'SEA', baseProj: 13.8, posRank: 19 },
-                { name: 'Terry McLaurin', pos: 'WR', team: 'WAS', baseProj: 13.5, posRank: 20 },
-                { name: 'Stefon Diggs', pos: 'WR', team: 'HOU', baseProj: 14.2, posRank: 21 },
-                { name: 'Brandon Aiyuk', pos: 'WR', team: 'SF', baseProj: 13.2, posRank: 22 },
-                { name: 'Deebo Samuel', pos: 'WR', team: 'SF', baseProj: 13.0, posRank: 23 },
-                { name: 'Rashee Rice', pos: 'WR', team: 'KC', baseProj: 14.5, posRank: 24 },
-                { name: 'Amari Cooper', pos: 'WR', team: 'BUF', baseProj: 12.8, posRank: 25 },
-                { name: 'Tank Dell', pos: 'WR', team: 'HOU', baseProj: 12.5, posRank: 26 },
-                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 12.2, posRank: 27 },
-                { name: 'Xavier Worthy', pos: 'WR', team: 'KC', baseProj: 12.0, posRank: 28 },
-                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 11.8, posRank: 29 },
-                { name: 'Christian Kirk', pos: 'WR', team: 'JAX', baseProj: 11.5, posRank: 30 },
-                { name: 'Courtland Sutton', pos: 'WR', team: 'DEN', baseProj: 11.2, posRank: 31 },
-                { name: 'Darnell Mooney', pos: 'WR', team: 'ATL', baseProj: 11.0, posRank: 32 },
-                { name: 'Khalil Shakir', pos: 'WR', team: 'BUF', baseProj: 10.8, posRank: 33 },
-                { name: 'Jameson Williams', pos: 'WR', team: 'DET', baseProj: 10.5, posRank: 34 },
-                { name: 'Keon Coleman', pos: 'WR', team: 'BUF', baseProj: 10.2, posRank: 35 },
-                { name: 'Jaxon Smith-Njigba', pos: 'WR', team: 'SEA', baseProj: 10.0, posRank: 36 },
-                { name: 'Jordan Addison', pos: 'WR', team: 'MIN', baseProj: 9.8, posRank: 37 },
-                { name: 'Rashod Bateman', pos: 'WR', team: 'BAL', baseProj: 9.5, posRank: 38 },
-                { name: 'Ladd McConkey', pos: 'WR', team: 'LAC', baseProj: 9.2, posRank: 39 },
-                { name: 'Jerry Jeudy', pos: 'WR', team: 'CLE', baseProj: 9.0, posRank: 40 },
+                // WRs (1 to 40) - finely graduated projections to create subtle pricing gaps
+                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.3, posRank: 1 },
+                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.9, posRank: 2 },
+                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.4, posRank: 3 },
+                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.9, posRank: 4 },
+                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.4, posRank: 5 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 17.8, posRank: 6 },
+                { name: 'Puka Nacua', pos: 'WR', team: 'LAR', baseProj: 17.4, posRank: 7 },
+                { name: 'Malik Nabers', pos: 'WR', team: 'NYG', baseProj: 16.9, posRank: 8 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 16.5, posRank: 9 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.1, posRank: 10 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.6, posRank: 11 },
+                { name: 'Davante Adams', pos: 'WR', team: 'NYJ', baseProj: 15.2, posRank: 12 },
+                { name: 'Mike Evans', pos: 'WR', team: 'TB', baseProj: 14.8, posRank: 13 },
+                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 14.5, posRank: 14 },
+                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.1, posRank: 15 },
+                { name: 'Rashee Rice', pos: 'WR', team: 'KC', baseProj: 13.8, posRank: 16 },
+                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 13.4, posRank: 17 },
+                { name: 'Cooper Kupp', pos: 'WR', team: 'LAR', baseProj: 13.1, posRank: 18 },
+                { name: 'Stefon Diggs', pos: 'WR', team: 'HOU', baseProj: 12.8, posRank: 19 },
+                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 12.5, posRank: 20 },
+                { name: 'DK Metcalf', pos: 'WR', team: 'SEA', baseProj: 12.2, posRank: 21 },
+                { name: 'Terry McLaurin', pos: 'WR', team: 'WAS', baseProj: 11.9, posRank: 22 },
+                { name: 'Brandon Aiyuk', pos: 'WR', team: 'SF', baseProj: 11.6, posRank: 23 },
+                { name: 'Deebo Samuel', pos: 'WR', team: 'SF', baseProj: 11.3, posRank: 24 },
+                { name: 'Amari Cooper', pos: 'WR', team: 'BUF', baseProj: 11.0, posRank: 25 },
+                { name: 'Tank Dell', pos: 'WR', team: 'HOU', baseProj: 10.7, posRank: 26 },
+                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 10.4, posRank: 27 },
+                { name: 'Xavier Worthy', pos: 'WR', team: 'KC', baseProj: 10.2, posRank: 28 },
+                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 9.9, posRank: 29 },
+                { name: 'Christian Kirk', pos: 'WR', team: 'JAX', baseProj: 9.6, posRank: 30 },
+                { name: 'Courtland Sutton', pos: 'WR', team: 'DEN', baseProj: 9.4, posRank: 31 },
+                { name: 'Darnell Mooney', pos: 'WR', team: 'ATL', baseProj: 9.1, posRank: 32 },
+                { name: 'Khalil Shakir', pos: 'WR', team: 'BUF', baseProj: 8.9, posRank: 33 },
+                { name: 'Jameson Williams', pos: 'WR', team: 'DET', baseProj: 8.6, posRank: 34 },
+                { name: 'Keon Coleman', pos: 'WR', team: 'BUF', baseProj: 8.4, posRank: 35 },
+                { name: 'Jaxon Smith-Njigba', pos: 'WR', team: 'SEA', baseProj: 8.1, posRank: 36 },
+                { name: 'Jordan Addison', pos: 'WR', team: 'MIN', baseProj: 7.9, posRank: 37 },
+                { name: 'Rashod Bateman', pos: 'WR', team: 'BAL', baseProj: 7.6, posRank: 38 },
+                { name: 'Ladd McConkey', pos: 'WR', team: 'LAC', baseProj: 7.4, posRank: 39 },
+                { name: 'Jerry Jeudy', pos: 'WR', team: 'CLE', baseProj: 7.2, posRank: 40 },
 
                 // TEs (1 to 25)
-                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.5, posRank: 1 },
-                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.2, posRank: 2 },
-                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 13.0, posRank: 3 },
-                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 12.8, posRank: 4 },
-                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 12.0, posRank: 5 },
-                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.2, posRank: 6 },
-                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.8, posRank: 7 },
-                { name: 'David Njoku', pos: 'TE', team: 'CLE', baseProj: 10.5, posRank: 8 },
-                { name: 'Jake Ferguson', pos: 'TE', team: 'DAL', baseProj: 10.2, posRank: 9 },
-                { name: 'Dallas Goedert', pos: 'TE', team: 'PHI', baseProj: 9.8, posRank: 10 },
-                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 9.5, posRank: 11 },
-                { name: 'T.J. Hockenson', pos: 'TE', team: 'MIN', baseProj: 11.0, posRank: 12 },
-                { name: 'Dalton Kincaid', pos: 'TE', team: 'BUF', baseProj: 9.2, posRank: 13 },
-                { name: 'Pat Freiermuth', pos: 'TE', team: 'PIT', baseProj: 8.8, posRank: 14 },
-                { name: 'Tucker Kraft', pos: 'TE', team: 'GB', baseProj: 8.5, posRank: 15 },
-                { name: 'Hunter Henry', pos: 'TE', team: 'NE', baseProj: 8.2, posRank: 16 },
-                { name: 'Cole Kmet', pos: 'TE', team: 'CHI', baseProj: 8.0, posRank: 17 },
-                { name: 'Isaiah Likely', pos: 'TE', team: 'BAL', baseProj: 7.8, posRank: 18 },
-                { name: 'Dalton Schultz', pos: 'TE', team: 'HOU', baseProj: 7.5, posRank: 19 },
-                { name: 'Noah Fant', pos: 'TE', team: 'SEA', baseProj: 7.2, posRank: 20 },
-                { name: 'Mike Gesicki', pos: 'TE', team: 'CIN', baseProj: 7.0, posRank: 21 },
-                { name: 'Tyler Conklin', pos: 'TE', team: 'NYJ', baseProj: 6.8, posRank: 22 },
-                { name: 'Erick All', pos: 'TE', team: 'CIN', baseProj: 6.5, posRank: 23 },
-                { name: 'Jonnu Smith', pos: 'TE', team: 'MIA', baseProj: 6.2, posRank: 24 },
-                { name: 'Chigoziem Okonkwo', pos: 'TE', team: 'TEN', baseProj: 6.0, posRank: 25 },
+                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.1, posRank: 1 },
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.6, posRank: 2 },
+                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.8, posRank: 3 },
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 12.4, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.7, posRank: 5 },
+                { name: 'T.J. Hockenson', pos: 'TE', team: 'MIN', baseProj: 11.2, posRank: 6 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 10.8, posRank: 7 },
+                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.3, posRank: 8 },
+                { name: 'David Njoku', pos: 'TE', team: 'CLE', baseProj: 9.9, posRank: 9 },
+                { name: 'Jake Ferguson', pos: 'TE', team: 'DAL', baseProj: 9.5, posRank: 10 },
+                { name: 'Dallas Goedert', pos: 'TE', team: 'PHI', baseProj: 9.1, posRank: 11 },
+                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 8.7, posRank: 12 },
+                { name: 'Dalton Kincaid', pos: 'TE', team: 'BUF', baseProj: 8.4, posRank: 13 },
+                { name: 'Pat Freiermuth', pos: 'TE', team: 'PIT', baseProj: 8.0, posRank: 14 },
+                { name: 'Tucker Kraft', pos: 'TE', team: 'GB', baseProj: 7.6, posRank: 15 },
+                { name: 'Hunter Henry', pos: 'TE', team: 'NE', baseProj: 7.3, posRank: 16 },
+                { name: 'Cole Kmet', pos: 'TE', team: 'CHI', baseProj: 7.0, posRank: 17 },
+                { name: 'Isaiah Likely', pos: 'TE', team: 'BAL', baseProj: 6.7, posRank: 18 },
+                { name: 'Dalton Schultz', pos: 'TE', team: 'HOU', baseProj: 6.4, posRank: 19 },
+                { name: 'Noah Fant', pos: 'TE', team: 'SEA', baseProj: 6.1, posRank: 20 },
+                { name: 'Mike Gesicki', pos: 'TE', team: 'CIN', baseProj: 5.8, posRank: 21 },
+                { name: 'Tyler Conklin', pos: 'TE', team: 'NYJ', baseProj: 5.5, posRank: 22 },
+                { name: 'Erick All', pos: 'TE', team: 'CIN', baseProj: 5.3, posRank: 23 },
+                { name: 'Jonnu Smith', pos: 'TE', team: 'MIA', baseProj: 5.0, posRank: 24 },
+                { name: 'Chigoziem Okonkwo', pos: 'TE', team: 'TEN', baseProj: 4.8, posRank: 25 },
 
                 // DEFs (All 32 NFL Teams)
-                { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', baseProj: 9.5, posRank: 1 },
-                { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', baseProj: 9.0, posRank: 2 },
-                { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', baseProj: 8.5, posRank: 3 },
-                { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', baseProj: 8.0, posRank: 4 },
-                { name: 'Houston Texans', pos: 'DEF', team: 'HOU', baseProj: 7.8, posRank: 5 },
-                { name: 'Baltimore Ravens', pos: 'DEF', team: 'BAL', baseProj: 7.5, posRank: 6 },
-                { name: 'Kansas City Chiefs', pos: 'DEF', team: 'KC', baseProj: 7.2, posRank: 7 },
-                { name: 'Buffalo Bills', pos: 'DEF', team: 'BUF', baseProj: 7.0, posRank: 8 },
-                { name: 'New York Jets', pos: 'DEF', team: 'NYJ', baseProj: 6.8, posRank: 9 },
-                { name: 'Philadelphia Eagles', pos: 'DEF', team: 'PHI', baseProj: 6.5, posRank: 10 },
-                { name: 'Green Bay Packers', pos: 'DEF', team: 'GB', baseProj: 6.2, posRank: 11 },
-                { name: 'Chicago Bears', pos: 'DEF', team: 'CHI', baseProj: 6.0, posRank: 12 },
-                { name: 'Seattle Seahawks', pos: 'DEF', team: 'SEA', baseProj: 5.8, posRank: 13 },
-                { name: 'Los Angeles Chargers', pos: 'DEF', team: 'LAC', baseProj: 5.6, posRank: 14 },
-                { name: 'Cleveland Browns', pos: 'DEF', team: 'CLE', baseProj: 5.4, posRank: 15 },
-                { name: 'Dallas Cowboys', pos: 'DEF', team: 'DAL', baseProj: 5.2, posRank: 16 },
-                { name: 'Detroit Lions', pos: 'DEF', team: 'DET', baseProj: 5.0, posRank: 17 },
-                { name: 'Miami Dolphins', pos: 'DEF', team: 'MIA', baseProj: 4.8, posRank: 18 },
-                { name: 'Tampa Bay Buccaneers', pos: 'DEF', team: 'TB', baseProj: 4.6, posRank: 19 },
-                { name: 'Cincinnati Bengals', pos: 'DEF', team: 'CIN', baseProj: 4.4, posRank: 20 },
-                { name: 'Atlanta Falcons', pos: 'DEF', team: 'ATL', baseProj: 4.2, posRank: 21 },
-                { name: 'Indianapolis Colts', pos: 'DEF', team: 'IND', baseProj: 4.0, posRank: 22 },
-                { name: 'Washington Commanders', pos: 'DEF', team: 'WAS', baseProj: 3.8, posRank: 23 },
-                { name: 'Arizona Cardinals', pos: 'DEF', team: 'ARI', baseProj: 3.6, posRank: 24 },
-                { name: 'New England Patriots', pos: 'DEF', team: 'NE', baseProj: 3.5, posRank: 25 },
-                { name: 'New York Giants', pos: 'DEF', team: 'NYG', baseProj: 3.4, posRank: 26 },
-                { name: 'Las Vegas Raiders', pos: 'DEF', team: 'LV', baseProj: 3.2, posRank: 27 },
-                { name: 'Los Angeles Rams', pos: 'DEF', team: 'LAR', baseProj: 3.0, posRank: 28 },
-                { name: 'New Orleans Saints', pos: 'DEF', team: 'NO', baseProj: 2.8, posRank: 29 },
-                { name: 'Carolina Panthers', pos: 'DEF', team: 'CAR', baseProj: 2.5, posRank: 30 },
-                { name: 'Tennessee Titans', pos: 'DEF', team: 'TEN', baseProj: 2.4, posRank: 31 },
-                { name: 'Jacksonville Jaguars', pos: 'DEF', team: 'JAX', baseProj: 2.2, posRank: 32 }
+                { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', baseProj: 9.4, posRank: 1 },
+                { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', baseProj: 8.9, posRank: 2 },
+                { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', baseProj: 8.4, posRank: 3 },
+                { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', baseProj: 7.9, posRank: 4 },
+                { name: 'Houston Texans', pos: 'DEF', team: 'HOU', baseProj: 7.6, posRank: 5 },
+                { name: 'Baltimore Ravens', pos: 'DEF', team: 'BAL', baseProj: 7.3, posRank: 6 },
+                { name: 'Kansas City Chiefs', pos: 'DEF', team: 'KC', baseProj: 7.0, posRank: 7 },
+                { name: 'Buffalo Bills', pos: 'DEF', team: 'BUF', baseProj: 6.7, posRank: 8 },
+                { name: 'New York Jets', pos: 'DEF', team: 'NYJ', baseProj: 6.4, posRank: 9 },
+                { name: 'Philadelphia Eagles', pos: 'DEF', team: 'PHI', baseProj: 6.2, posRank: 10 },
+                { name: 'Green Bay Packers', pos: 'DEF', team: 'GB', baseProj: 5.9, posRank: 11 },
+                { name: 'Chicago Bears', pos: 'DEF', team: 'CHI', baseProj: 5.7, posRank: 12 },
+                { name: 'Seattle Seahawks', pos: 'DEF', team: 'SEA', baseProj: 5.4, posRank: 13 },
+                { name: 'Los Angeles Chargers', pos: 'DEF', team: 'LAC', baseProj: 5.2, posRank: 14 },
+                { name: 'Cleveland Browns', pos: 'DEF', team: 'CLE', baseProj: 5.0, posRank: 15 },
+                { name: 'Dallas Cowboys', pos: 'DEF', team: 'DAL', baseProj: 4.8, posRank: 16 },
+                { name: 'Detroit Lions', pos: 'DEF', team: 'DET', baseProj: 4.6, posRank: 17 },
+                { name: 'Miami Dolphins', pos: 'DEF', team: 'MIA', baseProj: 4.4, posRank: 18 },
+                { name: 'Tampa Bay Buccaneers', pos: 'DEF', team: 'TB', baseProj: 4.2, posRank: 19 },
+                { name: 'Cincinnati Bengals', pos: 'DEF', team: 'CIN', baseProj: 4.0, posRank: 20 },
+                { name: 'Atlanta Falcons', pos: 'DEF', team: 'ATL', baseProj: 3.8, posRank: 21 },
+                { name: 'Indianapolis Colts', pos: 'DEF', team: 'IND', baseProj: 3.6, posRank: 22 },
+                { name: 'Washington Commanders', pos: 'DEF', team: 'WAS', baseProj: 3.4, posRank: 23 },
+                { name: 'Arizona Cardinals', pos: 'DEF', team: 'ARI', baseProj: 3.3, posRank: 24 },
+                { name: 'New England Patriots', pos: 'DEF', team: 'NE', baseProj: 3.1, posRank: 25 },
+                { name: 'New York Giants', pos: 'DEF', team: 'NYG', baseProj: 3.0, posRank: 26 },
+                { name: 'Las Vegas Raiders', pos: 'DEF', team: 'LV', baseProj: 2.8, posRank: 27 },
+                { name: 'Los Angeles Rams', pos: 'DEF', team: 'LAR', baseProj: 2.7, posRank: 28 },
+                { name: 'New Orleans Saints', pos: 'DEF', team: 'NO', baseProj: 2.5, posRank: 29 },
+                { name: 'Carolina Panthers', pos: 'DEF', team: 'CAR', baseProj: 2.3, posRank: 30 },
+                { name: 'Tennessee Titans', pos: 'DEF', team: 'TEN', baseProj: 2.2, posRank: 31 },
+                { name: 'Jacksonville Jaguars', pos: 'DEF', team: 'JAX', baseProj: 2.0, posRank: 32 }
             ];
 
             playerPool = eliteDatabase.map(p => {
@@ -648,7 +648,6 @@
                 let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
                 let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
                 
-                // Dynamically scale salary based on talent tier AND defensive matchup strength
                 let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric);
                 
                 let oppTag = teamOpponents[p.team] || 'BYE';
@@ -678,22 +677,22 @@
             initAppUI();
         }
 
-        // Tiered Elite Salary Formula ($7k - $9k range for elites, factoring in matchup strength)
+        // Tiered Salary Formula with granular rounding ($50 increments) for maximum salary variance
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric) {
             let basePrice = 4500;
             let multiplier = 220;
             
             if (position === 'QB') { basePrice = 5200; multiplier = 240; }
             else if (position === 'RB') { basePrice = 5000; multiplier = 250; }
-            else if (position === 'WR') { basePrice = 5000; multiplier = 240; }
-            else if (position === 'TE') { basePrice = 4200; multiplier = 200; }
+            else if (position === 'WR') { basePrice = 5000; multiplier = 245; }
+            else if (position === 'TE') { basePrice = 4200; multiplier = 205; }
             else if (position === 'DEF') { return 3200; }
 
-            // Matchup adjustment: soft defenses boost price, lockdown defenses discount it
-            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 200);
+            let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 180);
 
             let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
-            let finalSalary = Math.round(rawSalary / 100) * 100;
+            // Round to nearest $50 for granular salary differentiation (e.g. $7,450 vs $7,500 vs $7,550)
+            let finalSalary = Math.round(rawSalary / 50) * 50;
             return Math.min(Math.max(finalSalary, 2500), 9500);
         }
 
@@ -894,7 +893,7 @@
 
         function renderPlayerPool() {
             const tbody = document.getElementById('player-pool-tbody');
-            const query = document.getElementById('player-search').value.toLowerCase();
+            const query = document.getElementById('player-search'].value.toLowerCase();
             tbody.innerHTML = '';
 
             const filtered = playerPool.filter(p => {
