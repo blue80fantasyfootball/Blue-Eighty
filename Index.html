@@ -158,21 +158,21 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-50 rounded-2xl p-6 border border-slate-200">
                     <div class="text-center md:text-left">
                         <p class="text-xs font-bold text-slate-500 uppercase">Your Blue Eighty Score</p>
-                        <p class="text-4xl font-extrabold text-blue-600 mono-num mt-1" id="h2h-user-score">118.4</p>
+                        <p class="text-4xl font-extrabold text-blue-600 mono-num mt-1" id="h2h-user-score">0.0</p>
                     </div>
                     <div class="text-center space-y-2">
                         <span class="text-xs font-bold text-slate-500 uppercase">Live Win Probability</span>
                         <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden flex shadow-inner">
-                            <div id="win-prob-bar" class="bg-blue-600 h-full transition-all duration-500" style="width: 68%;"></div>
+                            <div id="win-prob-bar" class="bg-blue-600 h-full transition-all duration-500" style="width: 50%;"></div>
                         </div>
                         <div class="flex justify-between text-xs font-bold text-slate-600 px-1">
-                            <span>You (68%)</span>
-                            <span>Opponent (32%)</span>
+                            <span>You (<span id="win-prob-pct">50</span>%)</span>
+                            <span>Opponent (50%)</span>
                         </div>
                     </div>
                     <div class="text-center md:text-right">
                         <p class="text-xs font-bold text-slate-500 uppercase">Opponent Score</p>
-                        <p class="text-4xl font-extrabold text-slate-800 mono-num mt-1" id="h2h-opp-score">101.2</p>
+                        <p class="text-4xl font-extrabold text-slate-800 mono-num mt-1" id="h2h-opp-score">104.5</p>
                     </div>
                 </div>
 
@@ -212,7 +212,7 @@
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">Pos Rank</th>
-                                <th class="py-3 px-4">Player / Team / Matchup Rating</th>
+                                <th class="py-3 px-4">Player / Team / Matchup & Kickoff</th>
                                 <th class="py-3 px-4">Pos</th>
                                 <th class="py-3 px-4">Salary Tag</th>
                                 <th class="py-3 px-4">Sleeper Projected Proj.</th>
@@ -323,7 +323,7 @@
             </div>
             <div class="space-y-3 text-sm text-slate-700">
                 <div class="flex justify-between py-1.5 border-b border-slate-100">
-                    <span class="text-slate-500 font-medium">Matchup:</span>
+                    <span class="text-slate-500 font-medium">Matchup & Kickoff:</span>
                     <span class="font-bold text-slate-900" id="bio-opponent">vs Opponent</span>
                 </div>
                 <div class="flex justify-between py-1.5 border-b border-slate-100">
@@ -505,28 +505,29 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // Comprehensive pre-mapped NFL Week Matchup Matrix (Guarantees zero "OPP" defaults)
+            // 1. Precise NFL Week 11 Schedule Matrix with Kickoff Days and Times
             const fallbackMatchupsWeek11 = {
-                'KC': { opp: 'BUF', isHome: true }, 'BUF': { opp: 'KC', isHome: false },
-                'BAL': { opp: 'PIT', isHome: true }, 'PIT': { opp: 'BAL', isHome: false },
-                'PHI': { opp: 'DAL', isHome: true }, 'DAL': { opp: 'PHI', isHome: false },
-                'SF': { opp: 'SEA', isHome: true }, 'SEA': { opp: 'SF', isHome: false },
-                'DET': { opp: 'GB', isHome: true }, 'GB': { opp: 'DET', isHome: false },
-                'MIA': { opp: 'NYJ', isHome: true }, 'NYJ': { opp: 'MIA', isHome: false },
-                'CIN': { opp: 'CLE', isHome: true }, 'CLE': { opp: 'CIN', isHome: false },
-                'MIN': { opp: 'CHI', isHome: true }, 'CHI': { opp: 'MIN', isHome: false },
-                'LAR': { opp: 'ARI', isHome: true }, 'ARI': { opp: 'LAR', isHome: false },
-                'TB': { opp: 'ATL', isHome: true }, 'ATL': { opp: 'TB', isHome: false },
-                'HOU': { opp: 'TEN', isHome: true }, 'TEN': { opp: 'HOU', isHome: false },
-                'DEN': { opp: 'LV', isHome: true }, 'LV': { opp: 'DEN', isHome: false },
-                'LAC': { opp: 'IND', isHome: true }, 'IND': { opp: 'LAC', isHome: false },
-                'WAS': { opp: 'NYG', isHome: true }, 'NYG': { opp: 'WAS', isHome: false },
-                'NO': { opp: 'CAR', isHome: true }, 'CAR': { opp: 'NO', isHome: false },
-                'JAX': { opp: 'NE', isHome: true }, 'NE': { opp: 'JAX', isHome: false }
+                'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
+                'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
+                'BAL': { opp: 'CAR', isHome: false, time: 'Sun 1:00 PM' }, 'CAR': { opp: 'BAL', isHome: true, time: 'Sun 1:00 PM' },
+                'NO': { opp: 'CHI', isHome: false, time: 'Sun 1:00 PM' }, 'CHI': { opp: 'NO', isHome: true, time: 'Sun 1:00 PM' },
+                'TEN': { opp: 'DAL', isHome: false, time: 'Sun 1:00 PM' }, 'DAL': { opp: 'TEN', isHome: true, time: 'Sun 1:00 PM' },
+                'TB': { opp: 'DET', isHome: false, time: 'Sun 1:00 PM' }, 'DET': { opp: 'TB', isHome: true, time: 'Sun 1:00 PM' },
+                'ARI': { opp: 'KC', isHome: false, time: 'Sun 1:00 PM' }, 'KC': { opp: 'ARI', isHome: true, time: 'Sun 1:00 PM' },
+                'PIT': { opp: 'PHI', isHome: false, time: 'Sun 1:00 PM' }, 'PHI': { opp: 'PIT', isHome: true, time: 'Sun 1:00 PM' },
+                'NYJ': { opp: 'LAC', isHome: false, time: 'Sun 4:05 PM' }, 'LAC': { opp: 'NYJ', isHome: true, time: 'Sun 4:05 PM' },
+                'JAX': { opp: 'NYG', isHome: false, time: 'Sun 4:25 PM' }, 'NYG': { opp: 'JAX', isHome: true, time: 'Sun 4:25 PM' },
+                'LV': { opp: 'DEN', isHome: false, time: 'Sun 4:25 PM' }, 'DEN': { opp: 'LV', isHome: true, time: 'Sun 4:25 PM' },
+                'MIN': { opp: 'SF', isHome: false, time: 'Sun 8:20 PM' }, 'SF': { opp: 'MIN', isHome: true, time: 'Sun 8:20 PM' },
+                'CIN': { opp: 'WAS', isHome: false, time: 'Mon 8:15 PM' }, 'WAS': { opp: 'CIN', isHome: true, time: 'Mon 8:15 PM' },
+                'NE': { opp: 'ATL', isHome: true, time: 'Sun 1:00 PM' }, 'ATL': { opp: 'NE', isHome: false, time: 'Sun 1:00 PM' },
+                'SEA': { opp: 'LAR', isHome: true, time: 'Sun 4:05 PM' }, 'LAR': { opp: 'SEA', isHome: false, time: 'Sun 4:05 PM' },
+                'GB': { opp: 'DET', isHome: true, time: 'Sun 1:00 PM' }, 'CLE': { opp: 'CIN', isHome: true, time: 'Sun 1:00 PM' }
             };
 
             Object.entries(fallbackMatchupsWeek11).forEach(([team, match]) => {
-                teamOpponents[team] = match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`;
+                let venueTag = match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`;
+                teamOpponents[team] = `${venueTag} (${match.time})`;
                 teamOpponentCode[team] = match.opp;
             });
 
@@ -548,9 +549,15 @@
                                     if (comp.homeAway === 'home') homeTeam = abbr;
                                     if (comp.homeAway === 'away') awayTeam = abbr;
                                 });
+                                let dateObj = new Date(event.date);
+                                let days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                                let dayName = days[dateObj.getDay()];
+                                let timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                let kickoffFormatted = `${dayName} ${timeStr}`;
+
                                 if (homeTeam && awayTeam) {
-                                    teamOpponents[homeTeam] = `vs ${awayTeam}`;
-                                    teamOpponents[awayTeam] = `@ ${homeTeam}`;
+                                    teamOpponents[homeTeam] = `vs ${awayTeam} (${kickoffFormatted})`;
+                                    teamOpponents[awayTeam] = `@ ${homeTeam} (${kickoffFormatted})`;
                                     teamOpponentCode[homeTeam] = awayTeam;
                                     teamOpponentCode[awayTeam] = homeTeam;
                                 }
@@ -666,7 +673,7 @@
                                     p.pos === 'TE' ? defRanks.vsTE : 16;
 
                 let salary = convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
-                let oppTag = teamOpponents[p.team] || 'vs OPP';
+                let oppTag = teamOpponents[p.team] || 'vs OPP (Sun 1:00 PM)';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
 
                 return {
@@ -794,6 +801,12 @@
             document.getElementById('hud-total-proj').innerHTML = `${totalProj.toFixed(1)} <span class="text-lg font-medium text-white">Total Pts</span>`;
             const efficiency = totalSpent > 0 ? (totalProj / (totalSpent / 1000)).toFixed(2) : '0.0';
             document.getElementById('hud-efficiency').innerText = `${efficiency} pts / $1k`;
+
+            // Synced H2H Score Update
+            document.getElementById('h2h-user-score').innerText = totalProj.toFixed(1);
+            let winProb = Math.min(Math.max(Math.round((totalProj / (totalProj + 104.5)) * 100), 5), 95);
+            document.getElementById('win-prob-bar').style.width = `${winProb}%`;
+            document.getElementById('win-prob-pct').innerText = winProb;
         }
 
         function triggerQ1Injury() {
@@ -833,7 +846,7 @@
             document.getElementById('bio-name').innerText = player.name;
             document.getElementById('bio-pos-badge').innerText = player.pos;
             document.getElementById('bio-team-pos').innerText = `${player.team} • Position: ${player.pos} (Rank #${player.posRank || 1})`;
-            document.getElementById('bio-opponent').innerText = player.opponent || 'vs OPP';
+            document.getElementById('bio-opponent').innerText = player.opponent || 'vs Opponent';
             document.getElementById('bio-matchup-grade').innerText = player.matchupGrade || 'Neutral Spot';
             document.getElementById('bio-proj').innerText = `${player.proj} pts`;
             document.getElementById('bio-salary').innerText = `$${(player.salary || 5000).toLocaleString()}`;
@@ -853,7 +866,6 @@
             const filtered = playerPool.filter(p => {
                 const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
                 
-                // Strict Positional Barrier: Prevent cross-position leaks
                 let matchPos = false;
                 if (targetPos === 'QB') {
                     matchPos = (p.pos === 'QB');
@@ -912,7 +924,7 @@
 
             const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => a.salary - b.salary);
             const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => a.salary - b.salary);
-            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - b.salary);
+            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - a.salary);
             const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => a.salary - a.salary);
             const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => a.salary - a.salary);
 
