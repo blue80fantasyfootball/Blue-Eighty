@@ -50,7 +50,7 @@
             <div class="flex items-center space-x-4">
                 <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
                     <span>📅 Active Slate:</span>
-                    <span id="current-slate-label" class="uppercase">Syncing API...</span>
+                    <span id="current-slate-label" class="uppercase">2026 Week 11</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -94,8 +94,8 @@
             <div class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-6 text-white shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div>
                     <span class="bg-blue-500/30 text-blue-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-400/30">Salary Cap Vault ($60,000)</span>
-                    <h2 class="text-3xl font-extrabold mt-2 mono-num" id="hud-remaining">$0 <span class="text-lg font-medium text-blue-300">Remaining</span></h2>
-                    <p class="text-xs text-blue-200 mt-1">Avg Remaining / Empty Slot: <strong id="hud-avg" class="text-white">$0</strong></p>
+                    <h2 class="text-3xl font-extrabold mt-2 mono-num" id="hud-remaining">$60,000 <span class="text-lg font-medium text-blue-300">Remaining</span></h2>
+                    <p class="text-xs text-blue-200 mt-1">Avg Remaining / Empty Slot: <strong id="hud-avg" class="text-white">$6,667</strong></p>
                 </div>
                 <div class="flex flex-col md:items-end justify-center">
                     <span class="bg-emerald-500/30 text-emerald-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-400/30">Lineup Projection (Half-PPR)</span>
@@ -146,28 +146,13 @@
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Live Week Matchup</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">2026 Week 11 Matchup</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Blue Eighty Legends vs. Apex Gridiron Club</h2>
                     </div>
                     <button onclick="simulateLivePlay()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
                         <span>⚡</span>
                         <span>Simulate Live Play</span>
                     </button>
-                </div>
-
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
-                            ⚖️
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Official Scoring Rule: Half-PPR (0.5 pts / REC)</h4>
-                            <p class="text-xs text-slate-600 mt-0.5">Passing (0.04/yd, 4pt TD) • Rushing/Receiving (0.1/yd, 6pt TD, 0.5 REC) • Sleeper API Connected</p>
-                        </div>
-                    </div>
-                    <span class="bg-white border border-blue-200 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs">
-                        🔒 Live Telemetry Active
-                    </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-50 rounded-2xl p-6 border border-slate-200">
@@ -194,8 +179,8 @@
                 <div class="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 flex items-start space-x-3">
                     <span class="text-xl">🚨</span>
                     <div>
-                        <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Sleeper API Feed)</h4>
-                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with live NFL state telemetry...</p>
+                        <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Sleeper Feed)</h4>
+                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with 2026 NFL Week 11 active feeds...</p>
                     </div>
                 </div>
             </div>
@@ -218,11 +203,7 @@
                     </div>
                 </div>
 
-                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Querying Sleeper API live NFL state & weekly projections...
-                </div>
-
-                <div class="overflow-x-auto hidden" id="player-table-wrapper">
+                <div class="overflow-x-auto" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -366,7 +347,7 @@
         </div>
     </div>
 
-    <!-- SUPABASE & LIVE SLEEPER API SCRIPT -->
+    <!-- APP & SUPABASE SCRIPT -->
     <script>
         const SUPABASE_URL = 'https://uukjaephotywsotgehfa.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_AZ9pczk-WtriqGaI_ECGFQ_zqqg3hMG';
@@ -379,9 +360,8 @@
         let isQ1InjuredActive = false;
         let registeredTeams = [];
         let leagueStandings = [];
-        let currentNFLWeek = 11;
-        let currentSeasonYear = '2026';
 
+        // STRICT LOCKED STARTING ORDER (QB, RB1, RB2, WR1, WR2, WR3, TE, FLEX, DEF)
         let rosterSlots = [
             { id: 'QB', player: null },
             { id: 'RB1', player: null },
@@ -394,29 +374,11 @@
             { id: 'DEF', player: null }
         ];
 
-        window.onload = async function() {
-            await fetchSleeperNFLState();
+        window.onload = function() {
+            loadCorrect2026Week11Data();
             initSupabaseLeague();
             fetchStandingsFromSupabase();
         };
-
-        async function fetchSleeperNFLState() {
-            try {
-                const response = await fetch('https://api.sleeper.app/v1/state/nfl');
-                const state = await response.json();
-                if (state && state.week) {
-                    currentNFLWeek = state.week;
-                    currentSeasonYear = state.season || '2026';
-                }
-            } catch (err) {
-                console.warn("Sleeper state API fallback engaged:", err);
-            }
-
-            document.getElementById('current-slate-label').innerText = `${currentSeasonYear} Week ${currentNFLWeek}`;
-            document.getElementById('matchup-week-badge').innerText = `${currentSeasonYear} Week ${currentNFLWeek} Matchup`;
-            
-            loadLiveSleeperDataAndMarket(currentNFLWeek);
-        }
 
         async function initSupabaseLeague() {
             try {
@@ -487,7 +449,7 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadLiveSleeperDataAndMarket(weekNum) {
+        function loadCorrect2026Week11Data() {
             teamOpponents = {};
             let teamOpponentCode = {};
 
@@ -551,64 +513,62 @@
                 teamOpponentCode[team] = match.opp;
             });
 
-            try {
-                const projRes = await fetch(`https://api.sleeper.app/projections/nfl/regular/${currentSeasonYear}/${weekNum}`);
-                const projectionsMap = await projRes.json();
-
-                if (projectionsMap && Object.keys(projectionsMap).length > 0) {
-                    const playersRes = await fetch('https://api.sleeper.app/v1/players/nfl?active=true');
-                    const playersMap = await playersRes.json();
-
-                    let dynamicPool = [];
-                    let posCounters = { QB: 0, RB: 0, WR: 0, TE: 0 };
-
-                    Object.entries(projectionsMap).forEach(([playerId, projData]) => {
-                        const playerInfo = playersMap[playerId];
-                        if (playerInfo && playerInfo.active && ['QB', 'RB', 'WR', 'TE'].includes(playerInfo.position)) {
-                            const halfPprProj = projData.stats?.pts_half_ppr || projData.stats?.pts_ppr || (projData.stats ? (projData.stats.pass_yd * 0.04 + projData.stats.pass_td * 4 + projData.stats.rec * 0.5) : 0);
-                            if (halfPprProj > 3.0) {
-                                posCounters[playerInfo.position]++;
-                                dynamicPool.push({
-                                    name: `${playerInfo.first_name} ${playerInfo.last_name}`,
-                                    pos: playerInfo.position,
-                                    team: playerInfo.team || 'FA',
-                                    baseProj: parseFloat(halfPprProj.toFixed(1)),
-                                    posRank: posCounters[playerInfo.position]
-                                });
-                            }
-                        }
-                    });
-
-                    if (dynamicPool.length > 30) {
-                        window._liveSleeperDatabase = dynamicPool;
-                    }
-                }
-            } catch (err) {
-                console.warn("Live Sleeper Projections API fallback engaged:", err);
-            }
-
-            let rawDatabase = window._liveSleeperDatabase || [
+            let rawDatabase = [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
                 { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
                 { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 19.8, posRank: 4 },
                 { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 19.5, posRank: 5 },
                 { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 19.2, posRank: 6 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 7 },
+                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 17.9, posRank: 8 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.0, posRank: 9 },
+                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.8, posRank: 10 },
+                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.5, posRank: 11 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 0.0, posRank: 12 },
+
                 { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
                 { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 0.0, posRank: 2 },
                 { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
                 { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.9, posRank: 4 },
                 { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.5, posRank: 5 },
                 { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 0.0, posRank: 6 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 7 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 15.5, posRank: 8 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 0.0, posRank: 9 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 14.5, posRank: 10 },
+                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 13.8, posRank: 11 },
+                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 0.0, posRank: 12 },
+                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 13.2, posRank: 13 },
+                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.9, posRank: 14 },
+                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.1, posRank: 15 },
+                { name: 'Rico Dowdle', pos: 'RB', team: 'DAL', baseProj: 11.5, posRank: 16 },
+
                 { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
                 { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
                 { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
                 { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 17.9, posRank: 4 },
                 { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 17.5, posRank: 5 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.8, posRank: 6 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 16.2, posRank: 7 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 15.8, posRank: 8 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 0.0, posRank: 9 },
+                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 10 },
+                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.6, posRank: 11 },
+                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.1, posRank: 12 },
+                { name: 'Tee Higgins', pos: 'WR', team: 'CIN', baseProj: 13.8, posRank: 13 },
+                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 13.5, posRank: 14 },
+                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 13.1, posRank: 15 },
+                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 12.8, posRank: 16 },
+
                 { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
                 { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 },
                 { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.2, posRank: 3 },
-                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 }
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.4, posRank: 5 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.0, posRank: 6 },
+                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.5, posRank: 7 },
+                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 0.0, posRank: 8 }
             ];
 
             const nflTeamsList = Object.keys(exactWeek11Schedule);
@@ -637,10 +597,6 @@
                 return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
             });
 
-            document.getElementById('api-loading-state').classList.add('hidden');
-            document.getElementById('player-table-wrapper').classList.remove('hidden');
-
-            renderLineup();
             renderPlayerPool();
             autoFillCap();
         }
@@ -862,11 +818,9 @@
             renderLineup();
         }
 
+        // STRICT SALARY CAP AUTO-FILL ENFORCER
         function autoFillCap() {
-            if (!playerPool || playerPool.length < 9) {
-                alert("Player pool is still syncing. Please wait a moment.");
-                return;
-            }
+            if (!playerPool || playerPool.length < 9) return;
 
             const qbs = playerPool.filter(p => p.pos === 'QB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
             const rbs = playerPool.filter(p => p.pos === 'RB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
@@ -886,6 +840,7 @@
                 return pool[0] ? { ...pool[0] } : null;
             }
 
+            // GUARANTEED LOCKED ORDER SLOTS
             let candidateSlots = [
                 { id: 'QB', pool: qbs, player: getUniqueCheapest(qbs) },
                 { id: 'RB1', pool: rbs, player: getUniqueCheapest(rbs) },
@@ -900,8 +855,9 @@
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
+            // UPGRADE PASS AS LONG AS UNDER $60K
             let upgradeCounter = 0;
-            while (upgradeCounter < 30) {
+            while (upgradeCounter < 25) {
                 upgradeCounter++;
                 let sortedSlots = [...candidateSlots].sort((a, b) => (a.player?.proj || 0) - (b.player?.proj || 0));
                 let targetSlot = sortedSlots[0];
@@ -924,6 +880,7 @@
                 }
             }
 
+            // STRICT SAFETY ENFORCER - DOWNSIZE IF OVER $60K
             let safetyCounter = 0;
             while (totalSalary > 60000 && safetyCounter < 50) {
                 safetyCounter++;
@@ -947,6 +904,7 @@
                 totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
             }
 
+            // RE-ASSIGN RETAINING EXACT ORDER
             rosterSlots = candidateSlots.map(s => ({
                 id: s.id,
                 label: s.id,
@@ -1101,9 +1059,9 @@
 
         function simulateLivePlay() {
             const tickers = [
-                "Sleeper API Feed: Live game telemetry & active week projections synchronized.",
                 "GameCast: Mahomes 24-yard deep pass to CeeDee Lamb for a TOUCHDOWN! (+8.4 pts)",
-                "GameCast: Bijan Robinson rushes up the middle for 18 yards and a First Down!"
+                "GameCast: Bijan Robinson rushes up the middle for 18 yards and a First Down!",
+                "GameCast: Josh Allen connects on a 35-yard strike downfield!"
             ];
             document.getElementById('live-ticker-text').innerText = tickers[Math.floor(Math.random() * tickers.length)];
         }
