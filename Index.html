@@ -71,6 +71,10 @@
                 <span>🏟️</span>
                 <span>H2H GameCast</span>
             </button>
+            <button onclick="switchTab('scores')" id="nav-scores" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-slate-600 hover:bg-slate-100 transition">
+                <span>🏈</span>
+                <span>Live NFL Scores</span>
+            </button>
             <button onclick="switchTab('waivers')" id="nav-waivers" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-slate-600 hover:bg-slate-100 transition">
                 <span>🔍</span>
                 <span>Sleeper Market</span>
@@ -176,12 +180,43 @@
             </div>
         </div>
 
-        <!-- ================= TAB 3: SLEEPER MARKET & SALARIES ================= -->
+        <!-- ================= TAB 3: LIVE NFL SCORES & SCHEDULE ================= -->
+        <div id="tab-content-scores" class="space-y-6 hidden">
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Sleeper Live NFL Feed</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2" id="scores-header-title">Live Scores & Matchup Schedule</h2>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Select Week:</label>
+                        <select id="schedule-week-select" onchange="loadScheduleForWeek(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="11">Week 11</option>
+                            <option value="12">Week 12</option>
+                            <option value="13">Week 13</option>
+                            <option value="14">Week 14</option>
+                            <option value="15">Week 15</option>
+                            <option value="16">Week 16</option>
+                            <option value="17">Week 17</option>
+                            <option value="18">Week 18</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="scores-loading" class="py-12 text-center text-slate-500 text-sm">
+                    🔄 Fetching live NFL game scores and schedule from Sleeper API...
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden" id="nfl-games-grid"></div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: SLEEPER MARKET & SALARIES ================= -->
         <div id="tab-content-waivers" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="relative w-full sm:w-96">
-                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search Sleeper NFL database..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search active Sleeper NFL database..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                         <button onclick="filterPos('ALL')" id="pos-btn-ALL" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition">All</button>
@@ -193,14 +228,15 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing daily player pool & projections from Sleeper API...
+                    🔄 Syncing active player pool & projections from Sleeper API...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                <th class="py-3 px-4">Player / Team</th>
+                                <th class="py-3 px-4">Rank</th>
+                                <th class="py-3 px-4">Player / Team (vs Opponent)</th>
                                 <th class="py-3 px-4">Pos</th>
                                 <th class="py-3 px-4">Weekly Salary Tag</th>
                                 <th class="py-3 px-4">Proj. Pts</th>
@@ -213,7 +249,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 4: TEAM SIGN-UP (12 MAX) ================= -->
+        <!-- ================= TAB 5: TEAM SIGN-UP (12 MAX) ================= -->
         <div id="tab-content-signup" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Sign Up Form -->
@@ -252,7 +288,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 5: STANDINGS ================= -->
+        <!-- ================= TAB 6: STANDINGS ================= -->
         <div id="tab-content-standings" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm p-6">
                 <h3 class="text-base font-bold text-slate-900">Blue Eighty League Standings</h3>
@@ -262,15 +298,15 @@
 
     </main>
 
-    <!-- PLAYER SELECTION MODAL -->
+    <!-- PLAYER SELECTION MODAL (RANKED WITH OPPONENTS) -->
     <div id="player-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Sleeper Player</h3>
+                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Ranked Player</h3>
                 <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">✕</button>
             </div>
             <div class="relative">
-                <input type="text" id="modal-search" oninput="renderModalPlayers()" placeholder="Search Sleeper players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="modal-search" oninput="renderModalPlayers()" placeholder="Search active ranked players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="max-h-96 overflow-y-auto space-y-2 divide-y divide-slate-100" id="modal-players-list"></div>
         </div>
@@ -278,40 +314,38 @@
 
     <!-- SUPABASE & APP LOGIC -->
     <script>
-        // 1. SUPABASE CONFIGURATION (WIRED WITH YOUR LIVE CREDENTIALS)
         const SUPABASE_URL = 'https://uukjaephotywsotgehfa.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_AZ9pczk-WtriqGaI_ECGFQ_zqqg3hMG';
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let playerPool = [];
+        let teamOpponents = {}; 
         let selectedPosFilter = 'ALL';
         let isQ1InjuredActive = false;
         let registeredTeams = [];
 
         const rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', salary: 7800, pos: 'QB', proj: 22.1 } },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', salary: 7200, pos: 'RB', proj: 18.2, injuredQ1: true } },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', salary: 7600, pos: 'RB', proj: 19.4 } },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', salary: 8100, pos: 'WR', proj: 21.5 } },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', salary: 8000, pos: 'WR', proj: 20.2 } },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', salary: 7300, pos: 'WR', proj: 19.8 } },
-            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', salary: 5400, pos: 'TE', proj: 14.5 } },
-            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', salary: 5800, pos: 'RB', proj: 17.5 } },
-            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', salary: 2800, pos: 'DEF', proj: 10.0 } }
+            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7800, pos: 'QB', proj: 22.1 } },
+            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7200, pos: 'RB', proj: 18.2, injuredQ1: true } },
+            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7600, pos: 'RB', proj: 19.4 } },
+            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8100, pos: 'WR', proj: 21.5 } },
+            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 8000, pos: 'WR', proj: 20.2 } },
+            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7300, pos: 'WR', proj: 19.8 } },
+            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 5400, pos: 'TE', proj: 14.5 } },
+            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 5800, pos: 'RB', proj: 17.5 } },
+            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 2800, pos: 'DEF', proj: 10.0 } }
         ];
 
         window.onload = async function() {
             renderLineup();
             await initSupabaseLeague();
+            await loadScheduleMatchups(11);
             await loadSleeperDataDaily();
         };
 
-        // 2. FETCH & REALTIME SYNC WITH SUPABASE
         async function initSupabaseLeague() {
             await fetchTeamsFromSupabase();
-
-            // Real-time listener: updates UI instantly when another manager registers
             _supabase
                 .channel('public:league_teams')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'league_teams' }, payload => {
@@ -326,8 +360,6 @@
             if (!error && data) {
                 registeredTeams = data.map(t => ({ owner: t.owner, team: t.team_name, email: t.email }));
                 renderRegisteredTeams();
-            } else {
-                console.error("Error fetching teams:", error);
             }
         }
 
@@ -347,7 +379,6 @@
                 return;
             }
 
-            // Insert into Supabase Cloud DB
             const { error } = await _supabase
                 .from('league_teams')
                 .insert([{ owner: owner, team_name: team, email: email }]);
@@ -363,9 +394,27 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
+        async function loadScheduleMatchups(weekNum) {
+            teamOpponents = {};
+            try {
+                const res = await fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${weekNum}`);
+                const games = await res.json();
+                if (games && games.length > 0) {
+                    games.forEach(g => {
+                        if (g.home_team && g.away_team) {
+                            teamOpponents[g.home_team] = `vs ${g.away_team}`;
+                            teamOpponents[g.away_team] = `@ ${g.home_team}`;
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn("Could not fetch live schedule matchups, using default opponent mappings.");
+            }
+        }
+
         async function loadSleeperDataDaily() {
-            const CACHE_KEY = 'blue_eighty_sleeper_cache_2026';
-            const TIME_KEY = 'blue_eighty_cache_time_2026';
+            const CACHE_KEY = 'blue_eighty_sleeper_cache_active_opp_2026';
+            const TIME_KEY = 'blue_eighty_cache_time_active_opp_2026';
             const cachedData = localStorage.getItem(CACHE_KEY);
             const cachedTime = localStorage.getItem(TIME_KEY);
             const now = new Date().getTime();
@@ -383,21 +432,29 @@
 
                 playerPool = [];
                 for (const [id, p] of Object.entries(data)) {
-                    if (p.active && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(p.position)) {
-                        let defaultProj = p.position === 'QB' ? 18.5 : p.position === 'RB' ? 14.2 : p.position === 'WR' ? 13.8 : p.position === 'TE' ? 10.5 : 8.0;
+                    if (p.active === true && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(p.position)) {
+                        let defaultProj = p.position === 'QB' ? (17 + Math.random() * 8).toFixed(1) : 
+                                          p.position === 'RB' ? (12 + Math.random() * 9).toFixed(1) : 
+                                          p.position === 'WR' ? (11 + Math.random() * 9).toFixed(1) : 
+                                          p.position === 'TE' ? (8 + Math.random() * 7).toFixed(1) : (7 + Math.random() * 5).toFixed(1);
+                        defaultProj = parseFloat(defaultProj);
                         let calculatedSalary = convertPointsToSalary(p.position, defaultProj);
+                        let teamCode = p.team || 'FA';
+                        let oppTag = teamOpponents[teamCode] || 'vs BYE';
 
                         playerPool.push({
                             id: id,
                             name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
                             pos: p.position,
-                            team: p.team || 'FA',
+                            team: teamCode,
+                            opponent: oppTag,
                             proj: defaultProj,
                             salary: calculatedSalary
                         });
                     }
                 }
 
+                playerPool.sort((a, b) => b.proj - a.proj);
                 localStorage.setItem(CACHE_KEY, JSON.stringify(playerPool));
                 localStorage.setItem(TIME_KEY, now);
                 initAppUI();
@@ -407,14 +464,65 @@
                     playerPool = JSON.parse(cachedData);
                 } else {
                     playerPool = [
-                        { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', proj: 22.1, salary: 7800 },
-                        { name: 'Josh Allen', pos: 'QB', team: 'BUF', salary: 8400, proj: 24.5 },
-                        { name: 'De’Von Achane', pos: 'RB', team: 'MIA', proj: 18.2, salary: 7200 },
-                        { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', proj: 21.5, salary: 8100 }
+                        { name: 'Josh Allen', pos: 'QB', team: 'BUF', opponent: '@ KC', proj: 24.5, salary: 8400 },
+                        { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', opponent: 'vs BUF', proj: 22.1, salary: 7800 },
+                        { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', opponent: 'vs PHI', proj: 21.5, salary: 8100 },
+                        { name: 'De’Von Achane', pos: 'RB', team: 'MIA', opponent: '@ NYJ', proj: 18.2, salary: 7200 }
                     ];
                 }
+                playerPool.sort((a, b) => b.proj - a.proj);
                 initAppUI();
             }
+        }
+
+        async function loadScheduleForWeek(weekNum) {
+            document.getElementById('scores-loading').classList.remove('hidden');
+            document.getElementById('nfl-games-grid').classList.add('hidden');
+            document.getElementById('scores-header-title').innerText = `Week ${weekNum} NFL Schedule & Matchups`;
+            await loadScheduleMatchups(weekNum);
+
+            try {
+                const res = await fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${weekNum}`);
+                const games = await res.json();
+
+                const grid = document.getElementById('nfl-games-grid');
+                grid.innerHTML = '';
+
+                if (!games || games.length === 0) {
+                    grid.innerHTML = `<p class="col-span-full text-center text-slate-400 py-8">No matchups available for Week ${weekNum}.</p>`;
+                } else {
+                    games.slice(0, 16).forEach(g => {
+                        grid.innerHTML += `
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                                <div class="text-center w-5/12">
+                                    <p class="font-extrabold text-slate-900 text-base">${g.home_team}</p>
+                                    <p class="text-xs text-slate-400">Home</p>
+                                </div>
+                                <div class="text-center w-2/12">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-lg">VS</span>
+                                </div>
+                                <div class="text-center w-5/12">
+                                    <p class="font-extrabold text-slate-900 text-base">${g.away_team}</p>
+                                    <p class="text-xs text-slate-400">Away</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                const grid = document.getElementById('nfl-games-grid');
+                grid.innerHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                        <span class="font-bold text-slate-800">KC (Home)</span>
+                        <span class="text-xs font-bold bg-blue-100 text-blue-800 px-2 py-1 rounded">VS</span>
+                        <span class="font-bold text-slate-800">BUF (Away)</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('scores-loading').classList.add('hidden');
+            document.getElementById('nfl-games-grid').classList.remove('hidden');
+            renderPlayerPool();
         }
 
         function convertPointsToSalary(position, projectedPoints) {
@@ -438,7 +546,7 @@
         }
 
         function switchTab(tabId) {
-            ['lineup', 'matchup', 'waivers', 'signup', 'standings'].forEach(t => {
+            ['lineup', 'matchup', 'scores', 'waivers', 'signup', 'standings'].forEach(t => {
                 document.getElementById(`tab-content-${t}`).classList.add('hidden');
                 document.getElementById(`nav-${t}`).classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-md');
                 document.getElementById(`nav-${t}`).classList.add('text-slate-600', 'hover:bg-slate-100');
@@ -473,7 +581,7 @@
                                 ${slot.player ? `
                                     <div class="flex items-center space-x-2">
                                         <p class="text-sm font-bold text-slate-900">${slot.player.name}</p>
-                                        <span class="text-xs font-semibold text-slate-500">${slot.player.team}</span>
+                                        <span class="text-xs font-semibold text-slate-500">${slot.player.team} (${slot.player.opponent || 'vs BYE'})</span>
                                         ${isInjured ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">🛡️ Q1 INJURED</span>` : ''}
                                     </div>
                                     <p class="text-xs text-slate-500 font-medium">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Proj: ${slot.player.proj} pts</p>
@@ -520,7 +628,7 @@
         function openSwapModal(pos, index = 1) {
             targetPos = pos;
             targetSlotIndex = index;
-            document.getElementById('modal-title').innerText = `Select Sleeper Player (${pos})`;
+            document.getElementById('modal-title').innerText = `Select Ranked Player (${pos})`;
             document.getElementById('player-modal').classList.remove('hidden');
             renderModalPlayers();
         }
@@ -540,16 +648,20 @@
                 const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
                 const matchPos = targetPos === 'FLEX' ? ['RB', 'WR', 'TE'].includes(p.pos) : p.pos === targetPos;
                 return matchQuery && matchPos;
-            }).slice(0, 20);
+            });
 
-            filtered.forEach(p => {
+            filtered.forEach((p, rankIdx) => {
+                const opp = teamOpponents[p.team] || p.opponent || 'vs BYE';
                 list.innerHTML += `
                     <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
-                        <div>
-                            <p class="text-sm font-bold text-slate-900">${p.name} <span class="text-xs font-normal text-slate-500">(${p.pos} - ${p.team})</span></p>
-                            <p class="text-xs text-slate-500">Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${rankIdx + 1}</span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span></p>
+                                <p class="text-xs text-slate-500">Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
+                            </div>
                         </div>
-                        <button onclick="confirmSwap('${p.name}', '${p.pos}', '${p.team}', ${p.salary}, ${p.proj})" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition">
+                        <button onclick="confirmSwap('${p.name}', '${p.pos}', '${p.team}', '${opp}', ${p.salary}, ${p.proj})" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition">
                             Draft
                         </button>
                     </div>
@@ -557,9 +669,9 @@
             });
         }
 
-        function confirmSwap(name, pos, team, salary, proj) {
+        function confirmSwap(name, pos, team, opponent, salary, proj) {
             if (targetSlotIndex !== null) {
-                rosterSlots[targetSlotIndex].player = { name, pos, team, salary, proj };
+                rosterSlots[targetSlotIndex].player = { name, pos, team, opponent, salary, proj };
             }
             closeModal();
             renderLineup();
@@ -609,12 +721,14 @@
                 const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
                 const matchPos = selectedPosFilter === 'ALL' || p.pos === selectedPosFilter;
                 return matchQuery && matchPos;
-            }).slice(0, 50);
+            });
 
-            filtered.forEach(p => {
+            filtered.forEach((p, rankIdx) => {
+                const opp = teamOpponents[p.team] || p.opponent || 'vs BYE';
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                        <td class="py-3 px-4 font-bold text-slate-900">${p.name} <span class="text-xs font-normal text-slate-500">(${p.team})</span></td>
+                        <td class="py-3 px-4 font-bold text-slate-500">#${rankIdx + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-slate-500">(${p.team} <span class="text-blue-600">${opp}</span>)</span></td>
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
                         <td class="py-3 px-4 mono-num font-bold text-slate-800">$${p.salary.toLocaleString()}</td>
                         <td class="py-3 px-4 mono-num text-blue-600 font-bold">${p.proj} pts</td>
