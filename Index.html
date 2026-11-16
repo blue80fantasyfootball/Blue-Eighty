@@ -203,11 +203,11 @@
                     </div>
                 </div>
 
-                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
+                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm hidden">
                     🔄 Syncing live Sleeper weekly projections & $60k market valuations...
                 </div>
 
-                <div class="overflow-x-auto hidden" id="player-table-wrapper">
+                <div class="overflow-x-auto" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -505,7 +505,6 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // 1. Precise NFL Week 11 Schedule Matrix with Kickoff Days and Times
             const fallbackMatchupsWeek11 = {
                 'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
                 'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
@@ -531,165 +530,47 @@
                 teamOpponentCode[team] = match.opp;
             });
 
-            try {
-                const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
-                if (espnRes.ok) {
-                    const espnData = await espnRes.json();
-                    if (espnData && espnData.events && espnData.events.length > 0) {
-                        teamOpponents = {};
-                        teamOpponentCode = {};
-                        espnData.events.forEach(event => {
-                            const competition = event.competitions[0];
-                            if (competition && competition.competitors) {
-                                let homeTeam = '';
-                                let awayTeam = '';
-                                competition.competitors.forEach(comp => {
-                                    let abbr = comp.team.abbreviation;
-                                    if (abbr === 'WSH') abbr = 'WAS';
-                                    if (comp.homeAway === 'home') homeTeam = abbr;
-                                    if (comp.homeAway === 'away') awayTeam = abbr;
-                                });
-                                let dateObj = new Date(event.date);
-                                let days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                                let dayName = days[dateObj.getDay()];
-                                let timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                let kickoffFormatted = `${dayName} ${timeStr}`;
-
-                                if (homeTeam && awayTeam) {
-                                    teamOpponents[homeTeam] = `vs ${awayTeam} (${kickoffFormatted})`;
-                                    teamOpponents[awayTeam] = `@ ${homeTeam} (${kickoffFormatted})`;
-                                    teamOpponentCode[homeTeam] = awayTeam;
-                                    teamOpponentCode[awayTeam] = homeTeam;
-                                }
-                            }
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn("ESPN Scoreboard network notice, using verified schedule matrix:", err);
-            }
-
-            let sleeperRosterMap = {};
-            let sleeperProjectionsMap = {};
-
-            try {
-                const [playersRes, projRes] = await Promise.all([
-                    fetch('https://api.sleeper.app/v1/players/nfl'),
-                    fetch(`https://api.sleeper.app/projections/nfl/2026/${weekNum}?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=DEF`)
-                ]);
-
-                if (playersRes.ok) sleeperRosterMap = await playersRes.json();
-                if (projRes.ok) {
-                    const projArray = await projRes.json();
-                    projArray.forEach(item => {
-                        if (item.player_id && item.stats) {
-                            sleeperProjectionsMap[item.player_id] = item.stats.pts_half_ppr || item.stats.pts_ppr || 0;
-                        }
-                    });
-                }
-            } catch (err) {
-                console.warn("Sleeper API fetch warning, using fallback roster:", err);
-            }
-
-            let rawDatabase = [];
-
-            if (Object.keys(sleeperRosterMap).length > 0) {
-                const validPlayers = Object.entries(sleeperRosterMap)
-                    .map(([id, pl]) => ({
-                        id,
-                        ...pl,
-                        liveProj: sleeperProjectionsMap[id] || 0
-                    }))
-                    .filter(pl => {
-                        const hasValidPos = pl.position && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(pl.position);
-                        const isCurrentlyActive = pl.active === true && (pl.status === 'Active' || pl.position === 'DEF');
-                        const hasRealTeam = pl.team && teamOpponents[pl.team];
-                        const hasProjection = pl.liveProj > 2.0;
-
-                        return hasValidPos && isCurrentlyActive && hasRealTeam && hasProjection;
-                    });
-
-                validPlayers.sort((a, b) => b.liveProj - a.liveProj);
-
-                const topQBs = validPlayers.filter(p => p.position === 'QB').slice(0, 20);
-                const topRBs = validPlayers.filter(p => p.position === 'RB').slice(0, 35);
-                const topWRs = validPlayers.filter(p => p.position === 'WR').slice(0, 45);
-                const topTEs = validPlayers.filter(p => p.position === 'TE').slice(0, 25);
-                const topDEFs = validPlayers.filter(p => p.position === 'DEF').slice(0, 32);
-
-                const combinedPool = [...topQBs, ...topRBs, ...topWRs, ...topTEs, ...topDEFs];
-                const posCounters = { QB: 0, RB: 0, WR: 0, TE: 0, DEF: 0 };
-
-                combinedPool.forEach(pl => {
-                    posCounters[pl.position]++;
-                    rawDatabase.push({
-                        name: pl.position === 'DEF' ? `${pl.team} Defense` : pl.full_name,
-                        pos: pl.position,
-                        team: pl.team,
-                        baseProj: parseFloat(pl.liveProj.toFixed(1)),
-                        posRank: posCounters[pl.position]
-                    });
-                });
-            }
-
-            if (rawDatabase.length < 30) {
-                rawDatabase = [
-                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
-                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
-                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
-                    { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
-                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.2, posRank: 2 },
-                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
-                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
-                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
-                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
-                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
-                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 }
-                ];
-            }
+            // Instant robust default player pool so market populates immediately
+            let rawDatabase = [
+                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
+                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
+                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
+                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.2, posRank: 2 },
+                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
+                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
+                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
+                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
+                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 }
+            ];
 
             const nflTeamsList = Object.keys(teamOpponents);
             let defRankCounter = 0;
             nflTeamsList.forEach(teamCode => {
                 defRankCounter++;
-                if (!rawDatabase.some(p => p.pos === 'DEF' && p.team === teamCode)) {
-                    rawDatabase.push({
-                        name: `${teamCode} Defense`,
-                        pos: 'DEF',
-                        team: teamCode,
-                        baseProj: parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
-                        posRank: defRankCounter
-                    });
-                }
+                rawDatabase.push({
+                    name: `${teamCode} Defense`,
+                    pos: 'DEF',
+                    team: teamCode,
+                    baseProj: parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
+                    posRank: defRankCounter
+                });
             });
 
             playerPool = rawDatabase.map(p => {
                 let oppCode = teamOpponentCode[p.team];
                 let defRanks = oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
-                
-                let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : 
-                                    p.pos === 'RB' ? defRanks.vsRB : 
-                                    p.pos === 'WR' ? defRanks.vsWR : 
-                                    p.pos === 'TE' ? defRanks.vsTE : 16;
-
+                let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : p.pos === 'RB' ? defRanks.vsRB : p.pos === 'WR' ? defRanks.vsWR : p.pos === 'TE' ? defRanks.vsTE : 16;
                 let salary = convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
                 let oppTag = teamOpponents[p.team] || 'vs OPP (Sun 1:00 PM)';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
 
-                return {
-                    ...p,
-                    opponent: oppTag,
-                    proj: p.baseProj,
-                    salary: salary,
-                    matchupGrade: grade
-                };
+                return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
             });
 
-            if (playerPool.length > 5) {
-                autoFillCap();
-            } else {
-                initAppUI();
-            }
+            initAppUI();
+            autoFillCap();
         }
 
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
@@ -797,12 +678,11 @@
             const avg = emptySlots > 0 ? Math.round(remaining / emptySlots) : 0;
             document.getElementById('hud-avg').innerText = `$${avg.toLocaleString()}`;
 
-            // Update Team Projected Points HUD
+            // Update Team Projected Points HUD & H2H GameCast Synced Score
             document.getElementById('hud-total-proj').innerHTML = `${totalProj.toFixed(1)} <span class="text-lg font-medium text-white">Total Pts</span>`;
             const efficiency = totalSpent > 0 ? (totalProj / (totalSpent / 1000)).toFixed(2) : '0.0';
             document.getElementById('hud-efficiency').innerText = `${efficiency} pts / $1k`;
 
-            // Synced H2H Score Update
             document.getElementById('h2h-user-score').innerText = totalProj.toFixed(1);
             let winProb = Math.min(Math.max(Math.round((totalProj / (totalProj + 104.5)) * 100), 5), 95);
             document.getElementById('win-prob-bar').style.width = `${winProb}%`;
@@ -825,7 +705,7 @@
         let targetPos = null;
 
         function openSwapModal(slotId, index = 0) {
-            targetPos = slotId; // e.g. 'QB', 'RB1', 'WR2', 'FLEX'
+            targetPos = slotId;
             targetSlotIndex = index;
             document.getElementById('modal-title').innerText = `Select Player (${slotId})`;
             document.getElementById('player-modal').classList.remove('hidden');
@@ -924,9 +804,9 @@
 
             const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => a.salary - b.salary);
             const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => a.salary - b.salary);
-            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - a.salary);
-            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => a.salary - a.salary);
-            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => a.salary - a.salary);
+            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - b.salary);
+            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => a.salary - b.salary);
+            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => a.salary - b.salary);
 
             let draftedNames = new Set();
 
