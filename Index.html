@@ -404,14 +404,18 @@
         };
 
         async function initSupabaseLeague() {
-            await fetchTeamsFromSupabase();
-            _supabase
-                .channel('public:league_teams')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'league_teams' }, payload => {
-                    registeredTeams.push({ owner: payload.new.owner, team: payload.new.team_name, email: payload.new.email });
-                    renderRegisteredTeams();
-                })
-                .subscribe();
+            try {
+                await fetchTeamsFromSupabase();
+                _supabase
+                    .channel('public:league_teams')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'league_teams' }, payload => {
+                        registeredTeams.push({ owner: payload.new.owner, team: payload.new.team_name, email: payload.new.email });
+                        renderRegisteredTeams();
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn("Supabase connection warning:", err);
+            }
         }
 
         async function fetchTeamsFromSupabase() {
@@ -459,34 +463,35 @@
 
             try {
                 const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
-                const espnData = await espnRes.json();
-                
-                if (espnData && espnData.events) {
-                    espnData.events.forEach(event => {
-                        const competition = event.competitions[0];
-                        if (competition && competition.competitors) {
-                            let homeTeam = '';
-                            let awayTeam = '';
-                            competition.competitors.forEach(comp => {
-                                let abbr = comp.team.abbreviation;
-                                if (abbr === 'WSH') abbr = 'WAS';
-                                if (comp.homeAway === 'home') homeTeam = abbr;
-                                if (comp.homeAway === 'away') awayTeam = abbr;
-                            });
-                            if (homeTeam && awayTeam) {
-                                teamOpponents[homeTeam] = `vs ${awayTeam}`;
-                                teamOpponents[awayTeam] = `@ ${homeTeam}`;
-                                teamOpponentCode[homeTeam] = awayTeam;
-                                teamOpponentCode[awayTeam] = homeTeam;
+                if (espnRes.ok) {
+                    const espnData = await espnRes.json();
+                    if (espnData && espnData.events) {
+                        espnData.events.forEach(event => {
+                            const competition = event.competitions[0];
+                            if (competition && competition.competitors) {
+                                let homeTeam = '';
+                                let awayTeam = '';
+                                competition.competitors.forEach(comp => {
+                                    let abbr = comp.team.abbreviation;
+                                    if (abbr === 'WSH') abbr = 'WAS';
+                                    if (comp.homeAway === 'home') homeTeam = abbr;
+                                    if (comp.homeAway === 'away') awayTeam = abbr;
+                                });
+                                if (homeTeam && awayTeam) {
+                                    teamOpponents[homeTeam] = `vs ${awayTeam}`;
+                                    teamOpponents[awayTeam] = `@ ${homeTeam}`;
+                                    teamOpponentCode[homeTeam] = awayTeam;
+                                    teamOpponentCode[awayTeam] = homeTeam;
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             } catch (err) {
-                console.warn("ESPN Scoreboard API warning:", err);
+                console.warn("ESPN Scoreboard API fallback triggered:", err);
             }
 
-            // Granular baseline projections with fine fractional variance so salaries spread out evenly
+            // Master Player Database (Guaranteed to render even if external APIs fail)
             const eliteDatabase = [
                 // QBs (1 to 15)
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
@@ -532,7 +537,7 @@
                 { name: 'Aaron Jones', pos: 'RB', team: 'MIN', baseProj: 10.1, posRank: 24 },
                 { name: 'Zack Moss', pos: 'RB', team: 'CIN', baseProj: 9.8, posRank: 25 },
 
-                // WRs (1 to 40) - finely graduated projections to create subtle pricing gaps
+                // WRs (1 to 40)
                 { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.3, posRank: 1 },
                 { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.9, posRank: 2 },
                 { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.4, posRank: 3 },
@@ -677,7 +682,7 @@
             initAppUI();
         }
 
-        // Tiered Salary Formula with granular rounding ($50 increments) for maximum salary variance
+        // Tiered Salary Formula with granular rounding ($50 increments)
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric) {
             let basePrice = 4500;
             let multiplier = 220;
@@ -691,7 +696,6 @@
             let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 180);
 
             let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
-            // Round to nearest $50 for granular salary differentiation (e.g. $7,450 vs $7,500 vs $7,550)
             let finalSalary = Math.round(rawSalary / 50) * 50;
             return Math.min(Math.max(finalSalary, 2500), 9500);
         }
@@ -893,7 +897,10 @@
 
         function renderPlayerPool() {
             const tbody = document.getElementById('player-pool-tbody');
-            const query = document.getElementById('player-search'].value.toLowerCase();
+            const searchInput = document.getElementById('player-search');
+            if (!tbody || !searchInput) return;
+            
+            const query = searchInput.value.toLowerCase();
             tbody.innerHTML = '';
 
             const filtered = playerPool.filter(p => {
@@ -928,6 +935,7 @@
 
         function renderRegisteredTeams() {
             const container = document.getElementById('registered-teams-container');
+            if (!container) return;
             container.innerHTML = '';
             
             const count = registeredTeams.length;
