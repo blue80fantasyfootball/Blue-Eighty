@@ -91,20 +91,30 @@
 
         <!-- ================= TAB 1: WEEKLY LINEUP ($60K CAP) ================= -->
         <div id="tab-content-lineup" class="space-y-6">
-            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-6 text-white shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div>
                     <span class="bg-blue-500/30 text-blue-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-400/30">Salary Cap Vault ($60,000)</span>
                     <h2 class="text-3xl font-extrabold mt-2 mono-num" id="hud-remaining">$0 <span class="text-lg font-medium text-blue-300">Remaining</span></h2>
                     <p class="text-xs text-blue-200 mt-1">Avg Remaining / Empty Slot: <strong id="hud-avg" class="text-white">$0</strong></p>
                 </div>
-                <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
-                    <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
-                        <span>🪄</span>
-                        <span>Auto-Fill Optimal</span>
-                    </button>
-                    <button onclick="resetLineup()" class="bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition">
-                        Reset Lineup
-                    </button>
+                <div class="flex flex-col md:items-end justify-center">
+                    <span class="bg-emerald-500/30 text-emerald-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-400/30">Lineup Projection</span>
+                    <h2 class="text-3xl font-extrabold mt-2 mono-num text-emerald-300" id="hud-total-proj">0.0 <span class="text-lg font-medium text-white">Total Pts</span></h2>
+                    <p class="text-xs text-emerald-200 mt-1">Cap Efficiency: <strong id="hud-efficiency" class="text-white">0.0 pts / $1k</strong></p>
+                </div>
+                <div class="md:col-span-2 flex items-center justify-between pt-2 border-t border-blue-800/60">
+                    <div class="text-xs text-blue-200">
+                        <span>💡 Tip: Auto-Fill Optimal automatically crafts a lineup strictly under the $60k cap.</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
+                            <span>🪄</span>
+                            <span>Auto-Fill Optimal</span>
+                        </button>
+                        <button onclick="resetLineup()" class="bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                            Reset Lineup
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -563,12 +573,11 @@
                         const hasValidPos = pl.position && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(pl.position);
                         const isCurrentlyActive = pl.active === true && (pl.status === 'Active' || pl.position === 'DEF');
                         const hasRealTeam = pl.team && (Object.keys(teamOpponents).length === 0 || teamOpponents[pl.team]);
-                        const hasProjection = pl.liveProj > 2.0; // Automatically filters out injured/inactive/bye players
+                        const hasProjection = pl.liveProj > 2.0;
 
                         return hasValidPos && isCurrentlyActive && hasRealTeam && hasProjection;
                     });
 
-                // Sort by actual projected points descending
                 validPlayers.sort((a, b) => b.liveProj - a.liveProj);
 
                 const topQBs = validPlayers.filter(p => p.position === 'QB').slice(0, 20);
@@ -592,7 +601,6 @@
                 });
             }
 
-            // Fallback database if API is offline
             if (rawDatabase.length < 30) {
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
@@ -609,7 +617,6 @@
                 ];
             }
 
-            // Add active NFL Defenses rated strictly between $3,000 and $6,000
             const nflTeamsList = ['SF', 'MIN', 'PIT', 'DEN', 'HOU', 'BAL', 'KC', 'BUF', 'NYJ', 'PHI', 'GB', 'CHI', 'SEA', 'LAC', 'CLE', 'DAL', 'DET', 'MIA', 'TB', 'CIN', 'ATL', 'IND', 'WAS', 'ARI', 'NE', 'NYG', 'LV', 'LAR', 'NO', 'CAR', 'TEN', 'JAX'];
             let defRankCounter = 0;
             nflTeamsList.forEach(teamCode => {
@@ -650,34 +657,17 @@
                 };
             });
 
-            // Populate initial lineup automatically from live pool
             if (rosterSlots[0].player === null && playerPool.length > 5) {
-                const qbs = playerPool.filter(p => p.pos === 'QB');
-                const rbs = playerPool.filter(p => p.pos === 'RB');
-                const wrs = playerPool.filter(p => p.pos === 'WR');
-                const tes = playerPool.filter(p => p.pos === 'TE');
-                const defs = playerPool.filter(p => p.pos === 'DEF');
-
-                rosterSlots[0].player = qbs[0] ? { ...qbs[0] } : null;
-                rosterSlots[1].player = rbs[0] ? { ...rbs[0] } : null;
-                rosterSlots[2].player = rbs[1] ? { ...rbs[1] } : null;
-                rosterSlots[3].player = wrs[0] ? { ...wrs[0] } : null;
-                rosterSlots[4].player = wrs[1] ? { ...wrs[1] } : null;
-                rosterSlots[5].player = wrs[2] ? { ...wrs[2] } : null;
-                rosterSlots[6].player = tes[0] ? { ...tes[0] } : null;
-                rosterSlots[7].player = rbs[2] ? { ...rbs[2] } : null;
-                rosterSlots[8].player = defs[0] ? { ...defs[0] } : null;
+                autoFillCap();
+            } else {
+                initAppUI();
             }
-
-            initAppUI();
         }
 
-        // Calibrated $60k Cap Pricing Curve
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
             const uniqueOffset = ((hashCode(playerName) % 8) * 10);
 
             if (position === 'DEF') {
-                // Strict $3,000 to $6,000 range for Defenses
                 const defBase = 2600 + (projectedPoints * 280) + uniqueOffset;
                 return Math.min(Math.max(Math.round(defBase / 10) * 10, 3000), 6000);
             }
@@ -728,11 +718,16 @@
             const container = document.getElementById('lineup-slots-container');
             container.innerHTML = '';
             let totalSpent = 0;
+            let totalProj = 0;
             let emptySlots = 0;
 
             rosterSlots.forEach((slot, idx) => {
-                if (slot.player) totalSpent += slot.player.salary;
-                else emptySlots++;
+                if (slot.player) {
+                    totalSpent += slot.player.salary;
+                    totalProj += (slot.player.injuredQ1 && isQ1InjuredActive ? 0 : slot.player.proj);
+                } else {
+                    emptySlots++;
+                }
 
                 const isInjuredQ1 = slot.player && slot.player.injuredQ1 && isQ1InjuredActive;
                 const oppText = slot.player ? `${slot.player.team} (${slot.player.opponent})` : '';
@@ -749,7 +744,7 @@
                                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${slot.player.matchupGrade || 'Neutral'}</span>
                                         ${isInjuredQ1 ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">🛡️ Q1 INJURED</span>` : ''}
                                     </div>
-                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Projected Proj: ${slot.player.proj} pts</p>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Projected: ${slot.player.proj} pts</p>
                                 ` : `
                                     <p class="text-sm font-medium text-slate-400 italic">Empty Slot</p>
                                 `}
@@ -773,6 +768,11 @@
             document.getElementById('hud-remaining').innerHTML = `$${remaining.toLocaleString()} <span class="text-lg font-medium text-blue-300">Remaining</span>`;
             const avg = emptySlots > 0 ? Math.round(remaining / emptySlots) : 0;
             document.getElementById('hud-avg').innerText = `$${avg.toLocaleString()}`;
+
+            // Update Team Projected Points HUD
+            document.getElementById('hud-total-proj').innerHTML = `${totalProj.toFixed(1)} <span class="text-lg font-medium text-white">Total Pts</span>`;
+            const efficiency = totalSpent > 0 ? (totalProj / (totalSpent / 1000)).toFixed(2) : '0.0';
+            document.getElementById('hud-efficiency').innerText = `${efficiency} pts / $1k`;
         }
 
         function triggerQ1Injury() {
@@ -862,26 +862,61 @@
         }
 
         function autoFillCap() {
-            if (playerPool.length > 5) {
-                const qbs = playerPool.filter(p => p.pos === 'QB');
-                const rbs = playerPool.filter(p => p.pos === 'RB');
-                const wrs = playerPool.filter(p => p.pos === 'WR');
-                const tes = playerPool.filter(p => p.pos === 'TE');
-                const defs = playerPool.filter(p => p.pos === 'DEF');
-
-                rosterSlots[0].player = qbs[0] ? { ...qbs[0] } : rosterSlots[0].player;
-                rosterSlots[1].player = rbs[0] ? { ...rbs[0] } : rosterSlots[1].player;
-                rosterSlots[2].player = rbs[1] ? { ...rbs[1] } : rosterSlots[2].player;
-                rosterSlots[3].player = wrs[0] ? { ...wrs[0] } : rosterSlots[3].player;
-                rosterSlots[4].player = wrs[1] ? { ...wrs[1] } : rosterSlots[4].player;
-                rosterSlots[5].player = wrs[2] ? { ...wrs[2] } : rosterSlots[5].player;
-                rosterSlots[6].player = tes[0] ? { ...tes[0] } : rosterSlots[6].player;
-                rosterSlots[7].player = rbs[2] ? { ...rbs[2] } : rosterSlots[7].player;
-                rosterSlots[8].player = defs[0] ? { ...defs[0] } : rosterSlots[8].player;
+            if (playerPool.length < 9) {
+                alert("Player pool is still syncing. Please wait a second.");
+                return;
             }
+
+            const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => b.proj - a.proj);
+            const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => b.proj - a.proj);
+            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => b.proj - a.proj);
+            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => b.proj - a.proj);
+            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => b.proj - a.proj);
+
+            let candidateSlots = [
+                { id: 'QB', label: 'Quarterback (QB)', player: qbs[0] ? { ...qbs[0] } : null },
+                { id: 'RB1', label: 'Running Back 1 (RB)', player: rbs[0] ? { ...rbs[0] } : null },
+                { id: 'RB2', label: 'Running Back 2 (RB)', player: rbs[1] ? { ...rbs[1] } : null },
+                { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: wrs[0] ? { ...wrs[0] } : null },
+                { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: wrs[1] ? { ...wrs[1] } : null },
+                { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: wrs[2] ? { ...wrs[2] } : null },
+                { id: 'TE', label: 'Tight End (TE)', player: tes[0] ? { ...tes[0] } : null },
+                { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: rbs[2] ? { ...rbs[2] } : (wrs[3] ? { ...wrs[3] } : null) },
+                { id: 'DEF', label: 'Defense / Special Teams', player: defs[0] ? { ...defs[0] } : null }
+            ];
+
+            let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
+
+            // Greedily adjust downwards if total exceeds $60k cap
+            let safetyCounter = 0;
+            while (totalSalary > 60000 && safetyCounter < 15) {
+                safetyCounter++;
+                let flexibleSlots = candidateSlots.filter(s => ['RB1', 'RB2', 'WR1', 'WR2', 'WR3', 'FLEX', 'TE'].includes(s.id) && s.player);
+                if (flexibleSlots.length === 0) break;
+
+                flexibleSlots.sort((a, b) => b.player.salary - a.player.salary);
+                let targetSlot = flexibleSlots[0];
+
+                let poolForPos = targetSlot.id.startsWith('RB') || targetSlot.id === 'FLEX' ? rbs : 
+                                 targetSlot.id.startsWith('WR') ? wrs : tes;
+
+                let currentIndex = poolForPos.findIndex(p => p.name === targetSlot.player.name);
+                if (currentIndex !== -1 && currentIndex + 1 < poolForPos.length) {
+                    targetSlot.player = { ...poolForPos[currentIndex + 1] };
+                } else {
+                    break;
+                }
+
+                totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
+            }
+
+            rosterSlots = candidateSlots;
             isQ1InjuredActive = false;
             document.getElementById('injury-banner').classList.add('hidden');
             renderLineup();
+            if (playerPool.length > 5) {
+                initAppUI();
+            }
         }
 
         function resetLineup() {
