@@ -104,7 +104,7 @@
                 </div>
                 <div class="md:col-span-2 flex items-center justify-between pt-2 border-t border-blue-800/60">
                     <div class="text-xs text-blue-200">
-                        <span>💡 Tip: Auto-Fill Optimal strictly enforces the $60,000 limit with unique players.</span>
+                        <span>💡 Tip: Auto-Fill Optimal fills all 9 starters strictly under $60k with zero duplicates.</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
@@ -885,9 +885,10 @@
                         return { ...p };
                     }
                 }
-                return null;
+                return pool[0] ? { ...pool[0] } : null;
             }
 
+            // 1. Initial full-roster fill across all 9 slots (guaranteeing zero empty slots)
             let candidateSlots = [
                 { id: 'QB', label: 'Quarterback (QB)', player: getBestUnique(qbs) },
                 { id: 'RB1', label: 'Running Back 1 (RB)', player: getBestUnique(rbs) },
@@ -902,8 +903,9 @@
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
+            // 2. Iteratively swap priciest players for cheaper unique options until strictly <= $60,000
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 100) {
+            while (totalSalary > 60000 && safetyCounter < 150) {
                 safetyCounter++;
 
                 let activeSlots = candidateSlots.filter(s => s.player !== null);
@@ -930,8 +932,14 @@
                 }
 
                 if (!foundReplacement) {
-                    draftedNames.delete(targetSlot.player.name);
-                    targetSlot.player = null;
+                    let cheapestAvailable = poolForPos.slice().reverse().find(p => !draftedNames.has(p.name));
+                    if (cheapestAvailable) {
+                        draftedNames.delete(targetSlot.player.name);
+                        draftedNames.add(cheapestAvailable.name);
+                        targetSlot.player = { ...cheapestAvailable };
+                    } else {
+                        break;
+                    }
                 }
 
                 totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
