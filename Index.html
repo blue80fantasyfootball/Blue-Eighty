@@ -104,7 +104,7 @@
                 </div>
                 <div class="md:col-span-2 flex items-center justify-between pt-2 border-t border-blue-800/60">
                     <div class="text-xs text-blue-200">
-                        <span>💡 Tip: Auto-Fill Optimal fills all 9 starters strictly under $60k with zero duplicates.</span>
+                        <span>💡 Tip: Auto-Fill Optimal strictly enforces the $60,000 cap with 9 unique players.</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
@@ -753,7 +753,7 @@
                                     🛡️ Q1 Swap
                                 </button>
                             ` : ''}
-                            <button onclick="openSwapModal('${slot.id.replace(/[0-9]/g, '')}', ${idx})" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 transition">
+                            <button onclick="openSwapModal('${slot.id}', ${idx})" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 transition">
                                 ${slot.player ? 'Swap' : 'Add Player'}
                             </button>
                         </div>
@@ -787,10 +787,10 @@
         let targetSlotIndex = null;
         let targetPos = null;
 
-        function openSwapModal(pos, index = 1) {
-            targetPos = pos;
+        function openSwapModal(slotId, index = 0) {
+            targetPos = slotId; // e.g. 'QB', 'RB1', 'WR2', 'FLEX'
             targetSlotIndex = index;
-            document.getElementById('modal-title').innerText = `Select Player (${pos})`;
+            document.getElementById('modal-title').innerText = `Select Player (${slotId})`;
             document.getElementById('player-modal').classList.remove('hidden');
             renderModalPlayers();
         }
@@ -828,7 +828,23 @@
 
             const filtered = playerPool.filter(p => {
                 const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
-                const matchPos = targetPos === 'FLEX' ? ['RB', 'WR', 'TE'].includes(p.pos) : p.pos === targetPos;
+                
+                // Strict Positional Barrier: Prevent cross-position leaks
+                let matchPos = false;
+                if (targetPos === 'QB') {
+                    matchPos = (p.pos === 'QB');
+                } else if (targetPos && targetPos.startsWith('RB')) {
+                    matchPos = (p.pos === 'RB');
+                } else if (targetPos && targetPos.startsWith('WR')) {
+                    matchPos = (p.pos === 'WR');
+                } else if (targetPos === 'TE') {
+                    matchPos = (p.pos === 'TE');
+                } else if (targetPos === 'FLEX') {
+                    matchPos = ['RB', 'WR', 'TE'].includes(p.pos);
+                } else if (targetPos === 'DEF') {
+                    matchPos = (p.pos === 'DEF');
+                }
+
                 return matchQuery && matchPos;
             });
 
@@ -897,20 +913,21 @@
                 { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: getBestUnique(wrs) },
                 { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: getBestUnique(wrs) },
                 { id: 'TE', label: 'Tight End (TE)', player: getBestUnique(tes) },
-                { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: getBestUnique(rbs) || getBestUnique(wrs) },
+                { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: getBestUnique(rbs) || getBestUnique(wrs) || getBestUnique(tes) },
                 { id: 'DEF', label: 'Defense / Special Teams', player: getBestUnique(defs) }
             ];
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
-            // 2. Iteratively swap priciest players for cheaper unique options until strictly <= $60,000
+            // 2. Iteratively trim until total payroll is strictly <= $60,000 without leaving empty slots
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 150) {
+            while (totalSalary > 60000 && safetyCounter < 200) {
                 safetyCounter++;
 
                 let activeSlots = candidateSlots.filter(s => s.player !== null);
                 if (activeSlots.length === 0) break;
 
+                // Sort descending by salary to target the most expensive player first
                 activeSlots.sort((a, b) => b.player.salary - a.player.salary);
                 let targetSlot = activeSlots[0];
 
@@ -920,6 +937,7 @@
                                  posKey === 'WR' ? wrs :
                                  posKey === 'TE' ? tes : defs;
 
+                // Find a cheaper unique alternative in the exact same position pool
                 let foundReplacement = false;
                 for (let p of poolForPos) {
                     if (p.salary < targetSlot.player.salary && !draftedNames.has(p.name)) {
@@ -931,9 +949,10 @@
                     }
                 }
 
+                // If no cheaper option exists in this specific pool, drop to the absolute cheapest available unique player
                 if (!foundReplacement) {
                     let cheapestAvailable = poolForPos.slice().reverse().find(p => !draftedNames.has(p.name));
-                    if (cheapestAvailable) {
+                    if (cheapestAvailable && cheapestAvailable.salary < targetSlot.player.salary) {
                         draftedNames.delete(targetSlot.player.name);
                         draftedNames.add(cheapestAvailable.name);
                         targetSlot.player = { ...cheapestAvailable };
@@ -949,9 +968,6 @@
             isQ1InjuredActive = false;
             document.getElementById('injury-banner').classList.add('hidden');
             renderLineup();
-            if (playerPool.length > 5) {
-                initAppUI();
-            }
         }
 
         function resetLineup() {
