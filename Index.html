@@ -104,7 +104,7 @@
                 </div>
                 <div class="md:col-span-2 flex items-center justify-between pt-2 border-t border-blue-800/60">
                     <div class="text-xs text-blue-200">
-                        <span>💡 Tip: Auto-Fill Optimal strictly enforces the $60,000 cap with 9 unique players.</span>
+                        <span>💡 Tip: Auto-Fill Optimal strictly enforces the $60,000 cap with 9 unique value players.</span>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button onclick="autoFillCap()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
@@ -665,22 +665,22 @@
             const uniqueOffset = ((hashCode(playerName) % 8) * 10);
 
             if (position === 'DEF') {
-                const defBase = 2600 + (projectedPoints * 280) + uniqueOffset;
-                return Math.min(Math.max(Math.round(defBase / 10) * 10, 3000), 6000);
+                const defBase = 2400 + (projectedPoints * 260) + uniqueOffset;
+                return Math.min(Math.max(Math.round(defBase / 10) * 10, 2800), 5500);
             }
 
-            let floor = 3800;
-            let perPointRate = 240;
+            let floor = 3500;
+            let perPointRate = 220; // Lowered from 240 to scale values down (9,500 -> 9,000 range)
 
-            if (position === 'QB') { floor = 4400; perPointRate = 215; }
-            else if (position === 'RB') { floor = 3900; perPointRate = 265; }
-            else if (position === 'WR') { floor = 3800; perPointRate = 260; }
-            else if (position === 'TE') { floor = 3600; perPointRate = 275; }
+            if (position === 'QB') { floor = 4000; perPointRate = 195; }
+            else if (position === 'RB') { floor = 3600; perPointRate = 245; }
+            else if (position === 'WR') { floor = 3500; perPointRate = 240; }
+            else if (position === 'TE') { floor = 3300; perPointRate = 250; }
 
             const rawSalary = floor + (projectedPoints * perPointRate) + uniqueOffset;
             const finalSalary = Math.round(rawSalary / 10) * 10;
 
-            return Math.min(Math.max(finalSalary, 3500), 9900);
+            return Math.min(Math.max(finalSalary, 3200), 9200);
         }
 
         function hashCode(str) {
@@ -886,17 +886,19 @@
                 return;
             }
 
-            // 1. Separate pools by explicit position checks to prevent cross-contamination
-            const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => b.proj - a.proj);
-            const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => b.proj - a.proj);
-            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => b.proj - a.proj);
-            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => b.proj - a.proj);
-            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => b.proj - a.proj);
+            // 1. Separate pools sorted ascending by salary to start from value/middle tiers
+            const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => a.salary - b.salary);
+            const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => a.salary - b.salary);
+            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - a.salary);
+            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => a.salary - a.salary);
+            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => a.salary - a.salary);
 
             let draftedNames = new Set();
 
-            function getBestUnique(pool) {
-                for (let p of pool) {
+            function getMidTierUnique(pool) {
+                let midIndex = Math.floor(pool.length / 3);
+                let adjustedPool = [...pool.slice(midIndex), ...pool];
+                for (let p of adjustedPool) {
                     if (!draftedNames.has(p.name)) {
                         draftedNames.add(p.name);
                         return { ...p };
@@ -907,28 +909,22 @@
 
             // 2. Build initial candidate lineup with explicit pool mappings
             let candidateSlots = [
-                { id: 'QB', pool: qbs, player: null },
-                { id: 'RB1', pool: rbs, player: null },
-                { id: 'RB2', pool: rbs, player: null },
-                { id: 'WR1', pool: wrs, player: null },
-                { id: 'WR2', pool: wrs, player: null },
-                { id: 'WR3', pool: wrs, player: null },
-                { id: 'TE', pool: tes, player: null },
-                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes].sort((a, b) => b.proj - a.proj), player: null },
-                { id: 'DEF', pool: defs, player: null }
+                { id: 'QB', pool: qbs, player: getMidTierUnique(qbs) },
+                { id: 'RB1', pool: rbs, player: getMidTierUnique(rbs) },
+                { id: 'RB2', pool: rbs, player: getMidTierUnique(rbs) },
+                { id: 'WR1', pool: wrs, player: getMidTierUnique(wrs) },
+                { id: 'WR2', pool: wrs, player: getMidTierUnique(wrs) },
+                { id: 'WR3', pool: wrs, player: getMidTierUnique(wrs) },
+                { id: 'TE', pool: tes, player: getMidTierUnique(tes) },
+                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getMidTierUnique([...rbs, ...wrs, ...tes]) },
+                { id: 'DEF', pool: defs, player: getMidTierUnique(defs) }
             ];
-
-            // Initial pass: grab top unique player for each slot
-            candidateSlots.forEach(slot => {
-                let selected = getBestUnique(slot.pool);
-                slot.player = selected;
-            });
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
             // 3. Guaranteed hard reduction loop: strictly step down highest-salary players until <= $60,000
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 500) {
+            while (totalSalary > 60000 && safetyCounter < 300) {
                 safetyCounter++;
 
                 let activeSlots = candidateSlots.filter(s => s.player !== null);
@@ -937,12 +933,11 @@
                 activeSlots.sort((a, b) => b.player.salary - a.player.salary);
                 let targetSlot = activeSlots[0];
 
-                let cheaperAlternative = targetSlot.pool.find(p => p.salary < targetSlot.player.salary && !draftedNames.has(p.name));
-
-                if (cheaperAlternative) {
+                let cheaper = targetSlot.pool.find(p => p.salary < targetSlot.player.salary && !draftedNames.has(p.name));
+                if (cheaper) {
                     draftedNames.delete(targetSlot.player.name);
-                    draftedNames.add(cheaperAlternative.name);
-                    targetSlot.player = { ...cheaperAlternative };
+                    draftedNames.add(cheaper.name);
+                    targetSlot.player = { ...cheaper };
                 } else {
                     let cheapestAvailable = targetSlot.pool.slice().reverse().find(p => !draftedNames.has(p.name));
                     if (cheapestAvailable && cheapestAvailable.salary < targetSlot.player.salary) {
