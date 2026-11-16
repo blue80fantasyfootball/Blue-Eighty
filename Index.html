@@ -530,7 +530,6 @@
                 teamOpponentCode[team] = match.opp;
             });
 
-            // Instant robust default player pool so market populates immediately
             let rawDatabase = [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
@@ -678,7 +677,6 @@
             const avg = emptySlots > 0 ? Math.round(remaining / emptySlots) : 0;
             document.getElementById('hud-avg').innerText = `$${avg.toLocaleString()}`;
 
-            // Update Team Projected Points HUD & H2H GameCast Synced Score
             document.getElementById('hud-total-proj').innerHTML = `${totalProj.toFixed(1)} <span class="text-lg font-medium text-white">Total Pts</span>`;
             const efficiency = totalSpent > 0 ? (totalProj / (totalSpent / 1000)).toFixed(2) : '0.0';
             document.getElementById('hud-efficiency').innerText = `${efficiency} pts / $1k`;
@@ -810,10 +808,10 @@
 
             let draftedNames = new Set();
 
-            function getMidTierUnique(pool) {
-                let midIndex = Math.floor(pool.length / 3);
-                let adjustedPool = [...pool.slice(midIndex), ...pool];
-                for (let p of adjustedPool) {
+            function getBudgetUnique(pool) {
+                let budgetPool = pool.slice(0, Math.max(Math.floor(pool.length / 2), 1));
+                let extendedPool = [...budgetPool, ...pool];
+                for (let p of extendedPool) {
                     if (!draftedNames.has(p.name)) {
                         draftedNames.add(p.name);
                         return { ...p };
@@ -823,21 +821,21 @@
             }
 
             let candidateSlots = [
-                { id: 'QB', pool: qbs, player: getMidTierUnique(qbs) },
-                { id: 'RB1', pool: rbs, player: getMidTierUnique(rbs) },
-                { id: 'RB2', pool: rbs, player: getMidTierUnique(rbs) },
-                { id: 'WR1', pool: wrs, player: getMidTierUnique(wrs) },
-                { id: 'WR2', pool: wrs, player: getMidTierUnique(wrs) },
-                { id: 'WR3', pool: wrs, player: getMidTierUnique(wrs) },
-                { id: 'TE', pool: tes, player: getMidTierUnique(tes) },
-                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getMidTierUnique([...rbs, ...wrs, ...tes]) },
-                { id: 'DEF', pool: defs, player: getMidTierUnique(defs) }
+                { id: 'QB', pool: qbs, player: getBudgetUnique(qbs) },
+                { id: 'RB1', pool: rbs, player: getBudgetUnique(rbs) },
+                { id: 'RB2', pool: rbs, player: getBudgetUnique(rbs) },
+                { id: 'WR1', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'WR2', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'WR3', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'TE', pool: tes, player: getBudgetUnique(tes) },
+                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getBudgetUnique([...rbs, ...wrs, ...tes]) },
+                { id: 'DEF', pool: defs, player: getBudgetUnique(defs) }
             ];
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 300) {
+            while (totalSalary > 60000 && safetyCounter < 500) {
                 safetyCounter++;
 
                 let activeSlots = candidateSlots.filter(s => s.player !== null);
@@ -852,11 +850,12 @@
                     draftedNames.add(cheaper.name);
                     targetSlot.player = { ...cheaper };
                 } else {
-                    let cheapestAvailable = targetSlot.pool.slice().reverse().find(p => !draftedNames.has(p.name));
-                    if (cheapestAvailable && cheapestAvailable.salary < targetSlot.player.salary) {
+                    let allAvailable = playerPool.filter(p => !draftedNames.has(p.name)).sort((a, b) => a.salary - b.salary);
+                    if (allAvailable.length > 0) {
+                        let cheapest = allAvailable[0];
                         draftedNames.delete(targetSlot.player.name);
-                        draftedNames.add(cheapestAvailable.name);
-                        targetSlot.player = { ...cheapestAvailable };
+                        draftedNames.add(cheapest.name);
+                        targetSlot.player = { ...cheapest };
                     } else {
                         break;
                     }
@@ -867,11 +866,7 @@
 
             rosterSlots = candidateSlots.map(s => ({
                 id: s.id,
-                label: s.id.startsWith('QB') ? 'Quarterback (QB)' :
-                       s.id.startsWith('RB') ? 'Running Back (RB)' :
-                       s.id.startsWith('WR') ? 'Wide Receiver (WR)' :
-                       s.id === 'TE' ? 'Tight End (TE)' :
-                       s.id === 'FLEX' ? 'FLEX (RB/WR/TE)' : 'Defense / Special Teams',
+                label: s.id,
                 player: s.player
             }));
 
