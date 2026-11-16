@@ -546,18 +546,63 @@
                 teamOpponentCode[team] = match.opp;
             });
 
+            // Rich full-scale player market database across all positions
             let rawDatabase = [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
                 { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
+                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 19.8, posRank: 4 },
+                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 19.5, posRank: 5 },
+                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 19.2, posRank: 6 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 7 },
+                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 17.9, posRank: 8 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.5, posRank: 9 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.0, posRank: 10 },
+                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.8, posRank: 11 },
+                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.5, posRank: 12 },
+
                 { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
                 { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.2, posRank: 2 },
                 { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
+                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.9, posRank: 4 },
+                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.5, posRank: 5 },
+                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 16.1, posRank: 6 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 7 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 15.5, posRank: 8 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 14.9, posRank: 9 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 14.5, posRank: 10 },
+                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 13.8, posRank: 11 },
+                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 13.5, posRank: 12 },
+                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 13.2, posRank: 13 },
+                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.9, posRank: 14 },
+                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.1, posRank: 15 },
+                { name: 'Rico Dowdle', pos: 'RB', team: 'DAL', baseProj: 11.5, posRank: 16 },
+
                 { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
                 { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
                 { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
+                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 17.9, posRank: 4 },
+                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 17.5, posRank: 5 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.8, posRank: 6 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 16.2, posRank: 7 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 15.8, posRank: 8 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.4, posRank: 9 },
+                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 10 },
+                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.6, posRank: 11 },
+                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.1, posRank: 12 },
+                { name: 'Tee Higgins', pos: 'WR', team: 'CIN', baseProj: 13.8, posRank: 13 },
+                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 13.5, posRank: 14 },
+                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 13.1, posRank: 15 },
+                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 12.8, posRank: 16 },
+
                 { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
-                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 }
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 },
+                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.2, posRank: 3 },
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.4, posRank: 5 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.0, posRank: 6 },
+                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.5, posRank: 7 },
+                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 9.8, posRank: 8 }
             ];
 
             const nflTeamsList = Object.keys(teamOpponents);
