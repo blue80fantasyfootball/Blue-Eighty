@@ -203,7 +203,11 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto" id="player-table-wrapper">
+                <div id="market-loading-msg" class="py-8 text-center text-xs font-bold text-slate-400">
+                    🔄 Syncing live active NFL player directory from Sleeper API...
+                </div>
+
+                <div class="overflow-x-auto hidden" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -449,7 +453,7 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        function loadCorrect2026Week11Data() {
+        async function loadCorrect2026Week11Data() {
             teamOpponents = {};
             let teamOpponentCode = {};
 
@@ -513,63 +517,46 @@
                 teamOpponentCode[team] = match.opp;
             });
 
-            let rawDatabase = [
-                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
-                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
-                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
-                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 19.8, posRank: 4 },
-                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 19.5, posRank: 5 },
-                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 19.2, posRank: 6 },
-                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 7 },
-                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 17.9, posRank: 8 },
-                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.0, posRank: 9 },
-                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.8, posRank: 10 },
-                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.5, posRank: 11 },
-                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 0.0, posRank: 12 },
+            let rawDatabase = [];
 
-                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
-                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 0.0, posRank: 2 },
-                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
-                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.9, posRank: 4 },
-                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.5, posRank: 5 },
-                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 0.0, posRank: 6 },
-                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 7 },
-                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 15.5, posRank: 8 },
-                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 0.0, posRank: 9 },
-                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 14.5, posRank: 10 },
-                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 13.8, posRank: 11 },
-                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 0.0, posRank: 12 },
-                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 13.2, posRank: 13 },
-                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.9, posRank: 14 },
-                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.1, posRank: 15 },
-                { name: 'Rico Dowdle', pos: 'RB', team: 'DAL', baseProj: 11.5, posRank: 16 },
+            try {
+                const res = await fetch('https://api.sleeper.app/v1/players/nfl');
+                const allPlayers = await res.json();
+                let posCounters = { QB: 0, RB: 0, WR: 0, TE: 0 };
 
-                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
-                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
-                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
-                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 17.9, posRank: 4 },
-                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 17.5, posRank: 5 },
-                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.8, posRank: 6 },
-                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 16.2, posRank: 7 },
-                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 15.8, posRank: 8 },
-                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 0.0, posRank: 9 },
-                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 10 },
-                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.6, posRank: 11 },
-                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.1, posRank: 12 },
-                { name: 'Tee Higgins', pos: 'WR', team: 'CIN', baseProj: 13.8, posRank: 13 },
-                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 13.5, posRank: 14 },
-                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 13.1, posRank: 15 },
-                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 12.8, posRank: 16 },
+                Object.values(allPlayers).forEach(p => {
+                    if (p.active && p.team && ['QB', 'RB', 'WR', 'TE'].includes(p.position) && p.first_name && p.last_name) {
+                        posCounters[p.position]++;
+                        let baseProj = p.position === 'QB' ? Math.max(22 - (posCounters[p.position] * 0.35), 7) :
+                                       p.position === 'RB' ? Math.max(18 - (posCounters[p.position] * 0.25), 5) :
+                                       p.position === 'WR' ? Math.max(17 - (posCounters[p.position] * 0.2), 5) :
+                                       Math.max(13 - (posCounters[p.position] * 0.3), 4);
 
-                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
-                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 },
-                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.2, posRank: 3 },
-                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 },
-                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.4, posRank: 5 },
-                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.0, posRank: 6 },
-                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.5, posRank: 7 },
-                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 0.0, posRank: 8 }
-            ];
+                        rawDatabase.push({
+                            name: `${p.first_name} ${p.last_name}`,
+                            pos: p.position,
+                            team: p.team,
+                            baseProj: parseFloat(baseProj.toFixed(1)),
+                            posRank: posCounters[p.position]
+                        });
+                    }
+                });
+            } catch (err) {
+                console.warn("Sleeper live fetch fallback engaged:", err);
+            }
+
+            if (rawDatabase.length === 0) {
+                rawDatabase = [
+                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
+                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
+                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
+                    { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
+                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 2 },
+                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
+                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
+                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 }
+                ];
+            }
 
             const nflTeamsList = Object.keys(exactWeek11Schedule);
             let defRankCounter = 0;
@@ -596,6 +583,11 @@
 
                 return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
             });
+
+            const loadingMsg = document.getElementById('market-loading-msg');
+            if (loadingMsg) loadingMsg.classList.add('hidden');
+            const tableWrapper = document.getElementById('player-table-wrapper');
+            if (tableWrapper) tableWrapper.classList.remove('hidden');
 
             renderPlayerPool();
             autoFillCap();
