@@ -127,7 +127,7 @@
                         <p class="text-xs text-amber-700">Sustained injury in Q1. Salary cap refunded. Q1 points wiped. Tap below to swap instantly!</p>
                     </div>
                 </div>
-                <button onclick="openSwapModal('RB')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition">
+                <button onclick="openSwapModal('RB1')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition">
                     Swap Replacement Now
                 </button>
             </div>
@@ -749,7 +749,7 @@
                         </div>
                         <div class="flex items-center space-x-3">
                             ${isInjuredQ1 ? `
-                                <button onclick="openSwapModal('${slot.id.replace(/[0-9]/g, '')}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition">
+                                <button onclick="openSwapModal('${slot.id}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition">
                                     🛡️ Q1 Swap
                                 </button>
                             ` : ''}
@@ -886,6 +886,7 @@
                 return;
             }
 
+            // 1. Separate pools by explicit position checks to prevent cross-contamination
             const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => b.proj - a.proj);
             const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => b.proj - a.proj);
             const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => b.proj - a.proj);
@@ -904,54 +905,46 @@
                 return pool[0] ? { ...pool[0] } : null;
             }
 
-            // 1. Initial full-roster fill across all 9 slots (guaranteeing zero empty slots)
+            // 2. Build initial candidate lineup with explicit pool mappings
             let candidateSlots = [
-                { id: 'QB', label: 'Quarterback (QB)', player: getBestUnique(qbs) },
-                { id: 'RB1', label: 'Running Back 1 (RB)', player: getBestUnique(rbs) },
-                { id: 'RB2', label: 'Running Back 2 (RB)', player: getBestUnique(rbs) },
-                { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: getBestUnique(wrs) },
-                { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: getBestUnique(wrs) },
-                { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: getBestUnique(wrs) },
-                { id: 'TE', label: 'Tight End (TE)', player: getBestUnique(tes) },
-                { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: getBestUnique(rbs) || getBestUnique(wrs) || getBestUnique(tes) },
-                { id: 'DEF', label: 'Defense / Special Teams', player: getBestUnique(defs) }
+                { id: 'QB', pool: qbs, player: null },
+                { id: 'RB1', pool: rbs, player: null },
+                { id: 'RB2', pool: rbs, player: null },
+                { id: 'WR1', pool: wrs, player: null },
+                { id: 'WR2', pool: wrs, player: null },
+                { id: 'WR3', pool: wrs, player: null },
+                { id: 'TE', pool: tes, player: null },
+                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes].sort((a, b) => b.proj - a.proj), player: null },
+                { id: 'DEF', pool: defs, player: null }
             ];
+
+            // Initial pass: grab top unique player for each slot
+            candidateSlots.forEach(slot => {
+                let selected = getBestUnique(slot.pool);
+                slot.player = selected;
+            });
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
-            // 2. Iteratively trim until total payroll is strictly <= $60,000 without leaving empty slots
+            // 3. Guaranteed hard reduction loop: strictly step down highest-salary players until <= $60,000
             let safetyCounter = 0;
-            while (totalSalary > 60000 && safetyCounter < 200) {
+            while (totalSalary > 60000 && safetyCounter < 500) {
                 safetyCounter++;
 
                 let activeSlots = candidateSlots.filter(s => s.player !== null);
                 if (activeSlots.length === 0) break;
 
-                // Sort descending by salary to target the most expensive player first
                 activeSlots.sort((a, b) => b.player.salary - a.player.salary);
                 let targetSlot = activeSlots[0];
 
-                let posKey = targetSlot.id.replace(/[0-9]/g, '');
-                let poolForPos = posKey === 'QB' ? qbs :
-                                 posKey === 'RB' || targetSlot.id === 'FLEX' ? rbs :
-                                 posKey === 'WR' ? wrs :
-                                 posKey === 'TE' ? tes : defs;
+                let cheaperAlternative = targetSlot.pool.find(p => p.salary < targetSlot.player.salary && !draftedNames.has(p.name));
 
-                // Find a cheaper unique alternative in the exact same position pool
-                let foundReplacement = false;
-                for (let p of poolForPos) {
-                    if (p.salary < targetSlot.player.salary && !draftedNames.has(p.name)) {
-                        draftedNames.delete(targetSlot.player.name);
-                        draftedNames.add(p.name);
-                        targetSlot.player = { ...p };
-                        foundReplacement = true;
-                        break;
-                    }
-                }
-
-                // If no cheaper option exists in this specific pool, drop to the absolute cheapest available unique player
-                if (!foundReplacement) {
-                    let cheapestAvailable = poolForPos.slice().reverse().find(p => !draftedNames.has(p.name));
+                if (cheaperAlternative) {
+                    draftedNames.delete(targetSlot.player.name);
+                    draftedNames.add(cheaperAlternative.name);
+                    targetSlot.player = { ...cheaperAlternative };
+                } else {
+                    let cheapestAvailable = targetSlot.pool.slice().reverse().find(p => !draftedNames.has(p.name));
                     if (cheapestAvailable && cheapestAvailable.salary < targetSlot.player.salary) {
                         draftedNames.delete(targetSlot.player.name);
                         draftedNames.add(cheapestAvailable.name);
@@ -964,7 +957,16 @@
                 totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
             }
 
-            rosterSlots = candidateSlots;
+            rosterSlots = candidateSlots.map(s => ({
+                id: s.id,
+                label: s.id.startsWith('QB') ? 'Quarterback (QB)' :
+                       s.id.startsWith('RB') ? 'Running Back (RB)' :
+                       s.id.startsWith('WR') ? 'Wide Receiver (WR)' :
+                       s.id === 'TE' ? 'Tight End (TE)' :
+                       s.id === 'FLEX' ? 'FLEX (RB/WR/TE)' : 'Defense / Special Teams',
+                player: s.player
+            }));
+
             isQ1InjuredActive = false;
             document.getElementById('injury-banner').classList.add('hidden');
             renderLineup();
