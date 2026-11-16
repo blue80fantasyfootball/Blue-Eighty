@@ -204,7 +204,7 @@
                 </div>
 
                 <div id="market-loading-msg" class="py-8 text-center text-xs font-bold text-slate-400">
-                    🔄 Syncing live active NFL player directory from Sleeper API...
+                    🔄 Syncing live active NFL player directory from Sleeper API (Top 20 QBs, 30 RBs, 50 WRs, 30 TEs, 32 DEFs)...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -522,25 +522,37 @@
             try {
                 const res = await fetch('https://api.sleeper.app/v1/players/nfl');
                 const allPlayers = await res.json();
-                let posCounters = { QB: 0, RB: 0, WR: 0, TE: 0 };
+                
+                let qbList = [];
+                let rbList = [];
+                let wrList = [];
+                let teList = [];
 
                 Object.values(allPlayers).forEach(p => {
                     if (p.active && p.team && ['QB', 'RB', 'WR', 'TE'].includes(p.position) && p.first_name && p.last_name) {
-                        posCounters[p.position]++;
-                        let baseProj = p.position === 'QB' ? Math.max(22 - (posCounters[p.position] * 0.35), 7) :
-                                       p.position === 'RB' ? Math.max(18 - (posCounters[p.position] * 0.25), 5) :
-                                       p.position === 'WR' ? Math.max(17 - (posCounters[p.position] * 0.2), 5) :
-                                       Math.max(13 - (posCounters[p.position] * 0.3), 4);
-
-                        rawDatabase.push({
-                            name: `${p.first_name} ${p.last_name}`,
-                            pos: p.position,
-                            team: p.team,
-                            baseProj: parseFloat(baseProj.toFixed(1)),
-                            posRank: posCounters[p.position]
-                        });
+                        let name = `${p.first_name} ${p.last_name}`;
+                        let entry = { name, pos: p.position, team: p.team };
+                        if (p.position === 'QB') qbList.push(entry);
+                        else if (p.position === 'RB') rbList.push(entry);
+                        else if (p.position === 'WR') wrList.push(entry);
+                        else if (p.position === 'TE') teList.push(entry);
                     }
                 });
+
+                // Top 20 QBs, Top 30 RBs, Top 50 WRs, Top 30 TEs with assigned projections & ranks
+                qbList.slice(0, 20).forEach((p, idx) => {
+                    rawDatabase.push({ ...p, baseProj: parseFloat((21.5 - (idx * 0.5)).toFixed(1)), posRank: idx + 1 });
+                });
+                rbList.slice(0, 30).forEach((p, idx) => {
+                    rawDatabase.push({ ...p, baseProj: parseFloat((18.5 - (idx * 0.35)).toFixed(1)), posRank: idx + 1 });
+                });
+                wrList.slice(0, 50).forEach((p, idx) => {
+                    rawDatabase.push({ ...p, baseProj: parseFloat((18.0 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 });
+                });
+                teList.slice(0, 30).forEach((p, idx) => {
+                    rawDatabase.push({ ...p, baseProj: parseFloat((13.5 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 });
+                });
+
             } catch (err) {
                 console.warn("Sleeper live fetch fallback engaged:", err);
             }
@@ -549,7 +561,6 @@
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                     { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
-                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
                     { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
                     { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 2 },
                     { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
@@ -558,6 +569,7 @@
                 ];
             }
 
+            // All 32 NFL Defenses
             const nflTeamsList = Object.keys(exactWeek11Schedule);
             let defRankCounter = 0;
             nflTeamsList.forEach(teamCode => {
