@@ -39,7 +39,7 @@
                     <div class="flex items-center space-x-2">
                         <span class="text-xl font-extrabold tracking-tight text-slate-900">Blue Eighty</span>
                         <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Supabase Synced
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sleeper + Supabase Synced
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 font-medium">Weekly $60k Salary Cap • H2H League • Q1 Injury Shield™</p>
@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing unique micro-tier player valuations...
+                    🔄 Syncing live Sleeper roster feed & micro-tier valuations...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -381,15 +381,15 @@
         };
 
         const rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs BUF', salary: 7860, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'De’Von Achane', team: 'MIA', opponent: '@ NYJ', salary: 7140, pos: 'RB', proj: 18.3, matchupGrade: 'Tough Run Def', injuredQ1: true } },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7530, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs PHI', salary: 8170, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ GB', salary: 7920, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs CHI', salary: 7440, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
-            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs BUF', salary: 6160, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
+            { id: 'QB', label: 'Quarterback (QB)', player: { name: 'Patrick Mahomes', team: 'KC', opponent: 'vs ARI', salary: 7860, pos: 'QB', proj: 21.8, matchupGrade: 'Neutral Matchup' } },
+            { id: 'RB1', label: 'Running Back 1 (RB)', player: { name: 'Bijan Robinson', team: 'ATL', opponent: 'vs CAR', salary: 7530, pos: 'RB', proj: 19.6, matchupGrade: 'Soft Run Def' } },
+            { id: 'RB2', label: 'Running Back 2 (RB)', player: { name: 'Christian McCaffrey', team: 'SF', opponent: 'vs MIN', salary: 8120, pos: 'RB', proj: 19.4, matchupGrade: 'Lockdown Def' } },
+            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: { name: 'CeeDee Lamb', team: 'DAL', opponent: 'vs TEN', salary: 8170, pos: 'WR', proj: 21.7, matchupGrade: 'Elite Matchup' } },
+            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: { name: 'Justin Jefferson', team: 'MIN', opponent: '@ SF', salary: 7920, pos: 'WR', proj: 20.4, matchupGrade: 'Neutral Matchup' } },
+            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: { name: 'Amon-Ra St. Brown', team: 'DET', opponent: 'vs TB', salary: 7440, pos: 'WR', proj: 19.2, matchupGrade: 'Favorable Pass Def' } },
+            { id: 'TE', label: 'Tight End (TE)', player: { name: 'Travis Kelce', team: 'KC', opponent: 'vs ARI', salary: 6160, pos: 'TE', proj: 14.2, matchupGrade: 'Neutral Matchup' } },
             { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: { name: 'Kyren Williams', team: 'LAR', opponent: '@ SF', salary: 6930, pos: 'RB', proj: 17.4, matchupGrade: 'Tough Matchup' } },
-            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs LAR', salary: 3220, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
+            { id: 'DEF', label: 'Defense / Special Teams', player: { name: 'San Francisco 49ers', team: 'SF', opponent: 'vs MIN', salary: 4850, pos: 'DEF', proj: 9.8, matchupGrade: 'Solid Spot' } }
         ];
 
         window.onload = async function() {
@@ -398,7 +398,7 @@
             
             renderLineup();
             await initSupabaseLeague();
-            await loadLiveESPNData(currentNFLWeek);
+            await loadLiveSleeperAndESPNData(currentNFLWeek);
         };
 
         async function initSupabaseLeague() {
@@ -455,16 +455,17 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadLiveESPNData(weekNum) {
+        async function loadLiveSleeperAndESPNData(weekNum) {
             teamOpponents = {};
             let teamOpponentCode = {};
 
+            // 1. Fetch live schedule from ESPN to know matchups and Bye weeks
             try {
                 const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNum}`);
                 if (espnRes.ok) {
                     const espnData = await espnRes.json();
                     if (espnData && espnData.events) {
-                        espnData.events.forEach(event => {
+                        espnData.events.events.forEach || espnData.events.forEach(event => {
                             const competition = event.competitions[0];
                             if (competition && competition.competitors) {
                                 let homeTeam = '';
@@ -486,159 +487,90 @@
                     }
                 }
             } catch (err) {
-                console.warn("ESPN Scoreboard API fallback triggered:", err);
+                console.warn("ESPN Scoreboard warning:", err);
             }
 
-            const eliteDatabase = [
-                // QBs (1 to 15)
-                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
-                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.1, posRank: 2 },
-                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.8, posRank: 3 },
-                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.2, posRank: 4 },
-                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.4, posRank: 5 },
-                { name: 'Baker Mayfield', pos: 'QB', team: 'TB', baseProj: 19.3, posRank: 6 },
-                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 18.7, posRank: 7 },
-                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 8 },
-                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.6, posRank: 9 },
-                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.2, posRank: 10 },
-                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.9, posRank: 11 },
-                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.5, posRank: 12 },
-                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 16.1, posRank: 13 },
-                { name: 'Anthony Richardson', pos: 'QB', team: 'IND', baseProj: 15.7, posRank: 14 },
-                { name: 'Trevor Lawrence', pos: 'QB', team: 'JAX', baseProj: 15.3, posRank: 15 },
+            // 2. Fetch live master roster from Sleeper API
+            let sleeperRosterMap = {};
+            try {
+                const sleeperRes = await fetch('https://api.sleeper.app/v1/players/nfl');
+                if (sleeperRes.ok) {
+                    sleeperRosterMap = await sleeperRes.json();
+                }
+            } catch (err) {
+                console.warn("Sleeper API fetch warning, using fallback roster:", err);
+            }
 
-                // RBs (1 to 25)
-                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
-                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.6, posRank: 2 },
-                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.2, posRank: 3 },
-                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.7, posRank: 4 },
-                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.3, posRank: 5 },
-                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 16.8, posRank: 6 },
-                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.4, posRank: 7 },
-                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 15.9, posRank: 8 },
-                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.5, posRank: 9 },
-                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 15.1, posRank: 10 },
-                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 14.6, posRank: 11 },
-                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 14.2, posRank: 12 },
-                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 13.8, posRank: 13 },
-                { name: 'Travis Etienne Jr.', pos: 'RB', team: 'JAX', baseProj: 13.5, posRank: 14 },
-                { name: 'Isiah Pacheco', pos: 'RB', team: 'KC', baseProj: 13.1, posRank: 15 },
-                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.8, posRank: 16 },
-                { name: 'Rhamondre Stevenson', pos: 'RB', team: 'NE', baseProj: 12.4, posRank: 17 },
-                { name: 'David Montgomery', pos: 'RB', team: 'DET', baseProj: 12.1, posRank: 18 },
-                { name: 'Tony Pollard', pos: 'RB', team: 'TEN', baseProj: 11.7, posRank: 19 },
-                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 11.4, posRank: 20 },
-                { name: 'Brian Robinson Jr.', pos: 'RB', team: 'WAS', baseProj: 11.1, posRank: 21 },
-                { name: 'Najee Harris', pos: 'RB', team: 'PIT', baseProj: 10.7, posRank: 22 },
-                { name: 'J.K. Dobbins', pos: 'RB', team: 'LAC', baseProj: 10.4, posRank: 23 },
-                { name: 'Aaron Jones', pos: 'RB', team: 'MIN', baseProj: 10.1, posRank: 24 },
-                { name: 'Zack Moss', pos: 'RB', team: 'CIN', baseProj: 9.8, posRank: 25 },
+            let rawDatabase = [];
 
-                // WRs (1 to 40)
-                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.3, posRank: 1 },
-                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.9, posRank: 2 },
-                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.4, posRank: 3 },
-                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.9, posRank: 4 },
-                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.4, posRank: 5 },
-                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 17.8, posRank: 6 },
-                { name: 'Puka Nacua', pos: 'WR', team: 'LAR', baseProj: 17.4, posRank: 7 },
-                { name: 'Malik Nabers', pos: 'WR', team: 'NYG', baseProj: 16.9, posRank: 8 },
-                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 16.5, posRank: 9 },
-                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.1, posRank: 10 },
-                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.6, posRank: 11 },
-                { name: 'Davante Adams', pos: 'WR', team: 'NYJ', baseProj: 15.2, posRank: 12 },
-                { name: 'Mike Evans', pos: 'WR', team: 'TB', baseProj: 14.8, posRank: 13 },
-                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 14.5, posRank: 14 },
-                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.1, posRank: 15 },
-                { name: 'Rashee Rice', pos: 'WR', team: 'KC', baseProj: 13.8, posRank: 16 },
-                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 13.4, posRank: 17 },
-                { name: 'Cooper Kupp', pos: 'WR', team: 'LAR', baseProj: 13.1, posRank: 18 },
-                { name: 'Stefon Diggs', pos: 'WR', team: 'HOU', baseProj: 12.8, posRank: 19 },
-                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 12.5, posRank: 20 },
-                { name: 'DK Metcalf', pos: 'WR', team: 'SEA', baseProj: 12.2, posRank: 21 },
-                { name: 'Terry McLaurin', pos: 'WR', team: 'WAS', baseProj: 11.9, posRank: 22 },
-                { name: 'Brandon Aiyuk', pos: 'WR', team: 'SF', baseProj: 11.6, posRank: 23 },
-                { name: 'Deebo Samuel', pos: 'WR', team: 'SF', baseProj: 11.3, posRank: 24 },
-                { name: 'Amari Cooper', pos: 'WR', team: 'BUF', baseProj: 11.0, posRank: 25 },
-                { name: 'Tank Dell', pos: 'WR', team: 'HOU', baseProj: 10.7, posRank: 26 },
-                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 10.4, posRank: 27 },
-                { name: 'Xavier Worthy', pos: 'WR', team: 'KC', baseProj: 10.2, posRank: 28 },
-                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 9.9, posRank: 29 },
-                { name: 'Christian Kirk', pos: 'WR', team: 'JAX', baseProj: 9.6, posRank: 30 },
-                { name: 'Courtland Sutton', pos: 'WR', team: 'DEN', baseProj: 9.4, posRank: 31 },
-                { name: 'Darnell Mooney', pos: 'WR', team: 'ATL', baseProj: 9.1, posRank: 32 },
-                { name: 'Khalil Shakir', pos: 'WR', team: 'BUF', baseProj: 8.9, posRank: 33 },
-                { name: 'Jameson Williams', pos: 'WR', team: 'DET', baseProj: 8.6, posRank: 34 },
-                { name: 'Keon Coleman', pos: 'WR', team: 'BUF', baseProj: 8.4, posRank: 35 },
-                { name: 'Jaxon Smith-Njigba', pos: 'WR', team: 'SEA', baseProj: 8.1, posRank: 36 },
-                { name: 'Jordan Addison', pos: 'WR', team: 'MIN', baseProj: 7.9, posRank: 37 },
-                { name: 'Rashod Bateman', pos: 'WR', team: 'BAL', baseProj: 7.6, posRank: 38 },
-                { name: 'Ladd McConkey', pos: 'WR', team: 'LAC', baseProj: 7.4, posRank: 39 },
-                { name: 'Jerry Jeudy', pos: 'WR', team: 'CLE', baseProj: 7.2, posRank: 40 },
+            // If Sleeper responded successfully, build dynamic player pool from it
+            if (Object.keys(sleeperRosterMap).length > 0) {
+                let qbCount = 0, rbCount = 0, wrCount = 0, teCount = 0;
+                
+                for (const [id, pl] of Object.entries(sleeperRosterMap)) {
+                    if (pl.active && pl.position && ['QB', 'RB', 'WR', 'TE'].includes(pl.position) && pl.full_name) {
+                        let pos = pl.position;
+                        let team = pl.team || 'FA';
+                        
+                        // Assign sensible baseline projections based on position & activity
+                        let baseProj = pos === 'QB' ? 16.0 : pos === 'RB' ? 13.5 : pos === 'WR' ? 12.5 : 10.0;
+                        if (pl.search_rank && pl.search_rank < 300) {
+                            baseProj += Math.max(0, (300 - pl.search_rank) / 30);
+                        }
+                        baseProj = parseFloat(baseProj.toFixed(1));
 
-                // TEs (1 to 25)
-                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.1, posRank: 1 },
-                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.6, posRank: 2 },
-                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.8, posRank: 3 },
-                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 12.4, posRank: 4 },
-                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.7, posRank: 5 },
-                { name: 'T.J. Hockenson', pos: 'TE', team: 'MIN', baseProj: 11.2, posRank: 6 },
-                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 10.8, posRank: 7 },
-                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.3, posRank: 8 },
-                { name: 'David Njoku', pos: 'TE', team: 'CLE', baseProj: 9.9, posRank: 9 },
-                { name: 'Jake Ferguson', pos: 'TE', team: 'DAL', baseProj: 9.5, posRank: 10 },
-                { name: 'Dallas Goedert', pos: 'TE', team: 'PHI', baseProj: 9.1, posRank: 11 },
-                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 8.7, posRank: 12 },
-                { name: 'Dalton Kincaid', pos: 'TE', team: 'BUF', baseProj: 8.4, posRank: 13 },
-                { name: 'Pat Freiermuth', pos: 'TE', team: 'PIT', baseProj: 8.0, posRank: 14 },
-                { name: 'Tucker Kraft', pos: 'TE', team: 'GB', baseProj: 7.6, posRank: 15 },
-                { name: 'Hunter Henry', pos: 'TE', team: 'NE', baseProj: 7.3, posRank: 16 },
-                { name: 'Cole Kmet', pos: 'TE', team: 'CHI', baseProj: 7.0, posRank: 17 },
-                { name: 'Isaiah Likely', pos: 'TE', team: 'BAL', baseProj: 6.7, posRank: 18 },
-                { name: 'Dalton Schultz', pos: 'TE', team: 'HOU', baseProj: 6.4, posRank: 19 },
-                { name: 'Noah Fant', pos: 'TE', team: 'SEA', baseProj: 6.1, posRank: 20 },
-                { name: 'Mike Gesicki', pos: 'TE', team: 'CIN', baseProj: 5.8, posRank: 21 },
-                { name: 'Tyler Conklin', pos: 'TE', team: 'NYJ', baseProj: 5.5, posRank: 22 },
-                { name: 'Erick All', pos: 'TE', team: 'CIN', baseProj: 5.3, posRank: 23 },
-                { name: 'Jonnu Smith', pos: 'TE', team: 'MIA', baseProj: 5.0, posRank: 24 },
-                { name: 'Chigoziem Okonkwo', pos: 'TE', team: 'TEN', baseProj: 4.8, posRank: 25 },
+                        // Filter out players on Bye week
+                        let opp = teamOpponents[team];
+                        if (!opp) continue; // Skip players on BYE or missing game data
 
-                // DEFs (All 32 NFL Teams)
-                { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', baseProj: 9.4, posRank: 1 },
-                { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', baseProj: 8.9, posRank: 2 },
-                { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', baseProj: 8.4, posRank: 3 },
-                { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', baseProj: 7.9, posRank: 4 },
-                { name: 'Houston Texans', pos: 'DEF', team: 'HOU', baseProj: 7.6, posRank: 5 },
-                { name: 'Baltimore Ravens', pos: 'DEF', team: 'BAL', baseProj: 7.3, posRank: 6 },
-                { name: 'Kansas City Chiefs', pos: 'DEF', team: 'KC', baseProj: 7.0, posRank: 7 },
-                { name: 'Buffalo Bills', pos: 'DEF', team: 'BUF', baseProj: 6.7, posRank: 8 },
-                { name: 'New York Jets', pos: 'DEF', team: 'NYJ', baseProj: 6.4, posRank: 9 },
-                { name: 'Philadelphia Eagles', pos: 'DEF', team: 'PHI', baseProj: 6.2, posRank: 10 },
-                { name: 'Green Bay Packers', pos: 'DEF', team: 'GB', baseProj: 5.9, posRank: 11 },
-                { name: 'Chicago Bears', pos: 'DEF', team: 'CHI', baseProj: 5.7, posRank: 12 },
-                { name: 'Seattle Seahawks', pos: 'DEF', team: 'SEA', baseProj: 5.4, posRank: 13 },
-                { name: 'Los Angeles Chargers', pos: 'DEF', team: 'LAC', baseProj: 5.2, posRank: 14 },
-                { name: 'Cleveland Browns', pos: 'DEF', team: 'CLE', baseProj: 5.0, posRank: 15 },
-                { name: 'Dallas Cowboys', pos: 'DEF', team: 'DAL', baseProj: 4.8, posRank: 16 },
-                { name: 'Detroit Lions', pos: 'DEF', team: 'DET', baseProj: 4.6, posRank: 17 },
-                { name: 'Miami Dolphins', pos: 'DEF', team: 'MIA', baseProj: 4.4, posRank: 18 },
-                { name: 'Tampa Bay Buccaneers', pos: 'DEF', team: 'TB', baseProj: 4.2, posRank: 19 },
-                { name: 'Cincinnati Bengals', pos: 'DEF', team: 'CIN', baseProj: 4.0, posRank: 20 },
-                { name: 'Atlanta Falcons', pos: 'DEF', team: 'ATL', baseProj: 3.8, posRank: 21 },
-                { name: 'Indianapolis Colts', pos: 'DEF', team: 'IND', baseProj: 3.6, posRank: 22 },
-                { name: 'Washington Commanders', pos: 'DEF', team: 'WAS', baseProj: 3.4, posRank: 23 },
-                { name: 'Arizona Cardinals', pos: 'DEF', team: 'ARI', baseProj: 3.3, posRank: 24 },
-                { name: 'New England Patriots', pos: 'DEF', team: 'NE', baseProj: 3.1, posRank: 25 },
-                { name: 'New York Giants', pos: 'DEF', team: 'NYG', baseProj: 3.0, posRank: 26 },
-                { name: 'Las Vegas Raiders', pos: 'DEF', team: 'LV', baseProj: 2.8, posRank: 27 },
-                { name: 'Los Angeles Rams', pos: 'DEF', team: 'LAR', baseProj: 2.7, posRank: 28 },
-                { name: 'New Orleans Saints', pos: 'DEF', team: 'NO', baseProj: 2.5, posRank: 29 },
-                { name: 'Carolina Panthers', pos: 'DEF', team: 'CAR', baseProj: 2.3, posRank: 30 },
-                { name: 'Tennessee Titans', pos: 'DEF', team: 'TEN', baseProj: 2.2, posRank: 31 },
-                { name: 'Jacksonville Jaguars', pos: 'DEF', team: 'JAX', baseProj: 2.0, posRank: 32 }
-            ];
+                        if (pos === 'QB' && qbCount < 20) { qbCount++; rawDatabase.push({ name: pl.full_name, pos: 'QB', team: team, baseProj: baseProj, posRank: qbCount }); }
+                        else if (pos === 'RB' && rbCount < 35) { rbCount++; rawDatabase.push({ name: pl.full_name, pos: 'RB', team: team, baseProj: baseProj, posRank: rbCount }); }
+                        else if (pos === 'WR' && wrCount < 50) { wrCount++; rawDatabase.push({ name: pl.full_name, pos: 'WR', team: team, baseProj: baseProj, posRank: wrCount }); }
+                        else if (pos === 'TE' && teCount < 30) { teCount++; rawDatabase.push({ name: pl.full_name, pos: 'TE', team: team, baseProj: baseProj, posRank: teCount }); }
+                    }
+                }
+            }
 
-            playerPool = eliteDatabase.map(p => {
+            // Fallback curated elite database if API is throttled or offline
+            if (rawDatabase.length < 30) {
+                rawDatabase = [
+                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
+                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.1, posRank: 2 },
+                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.8, posRank: 3 },
+                    { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.2, posRank: 4 },
+                    { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.4, posRank: 5 },
+                    { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
+                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.6, posRank: 2 },
+                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.2, posRank: 3 },
+                    { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.7, posRank: 4 },
+                    { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.3, posRank: 5 },
+                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.3, posRank: 1 },
+                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.9, posRank: 2 },
+                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.4, posRank: 3 },
+                    { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.9, posRank: 4 },
+                    { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.4, posRank: 5 },
+                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.1, posRank: 1 },
+                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.6, posRank: 2 },
+                    { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.8, posRank: 3 }
+                ];
+            }
+
+            // Add all 32 NFL Defenses rated between $3,000 and $6,000
+            const nflTeamsList = ['SF', 'MIN', 'PIT', 'DEN', 'HOU', 'BAL', 'KC', 'BUF', 'NYJ', 'PHI', 'GB', 'CHI', 'SEA', 'LAC', 'CLE', 'DAL', 'DET', 'MIA', 'TB', 'CIN', 'ATL', 'IND', 'WAS', 'ARI', 'NE', 'NYG', 'LV', 'LAR', 'NO', 'CAR', 'TEN', 'JAX'];
+            nflTeamsList.forEach((teamCode, idx) => {
+                let opp = teamOpponents[teamCode];
+                if (opp) { // Only include defenses not on Bye week
+                    rawDatabase.push({
+                        name: `${teamCode} Defense`,
+                        pos: 'DEF',
+                        team: teamCode,
+                        baseProj: parseFloat((9.5 - (idx * 0.2)).toFixed(1)),
+                        posRank: idx + 1
+                    });
+                }
+            });
+
+            playerPool = rawDatabase.map(p => {
                 let oppCode = teamOpponentCode[p.team];
                 let defRanks = oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
                 
@@ -650,10 +582,9 @@
                 let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
                 let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
                 
-                // Pass position rank to guarantee unique micro-tier pricing offsets
                 let salary = convertPointsToSalary(p.pos, adjustedProj, defRankMetric, p.posRank || 1, p.name);
                 
-                let oppTag = teamOpponents[p.team] || 'BYE';
+                let oppTag = teamOpponents[p.team] || 'vs OPP';
                 let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
 
                 return {
@@ -665,10 +596,17 @@
                 };
             });
 
+            // Filter out any players or roster slots currently assigned to a Bye week team
             rosterSlots.forEach(slot => {
                 if (slot.player) {
                     const matched = playerPool.find(p => p.name.toLowerCase() === slot.player.name.toLowerCase());
-                    if (matched) {
+                    if (!matched || matched.opponent === 'BYE') {
+                        // Automatically replace with next best available healthy player at that position
+                        const replacement = playerPool.find(p => p.pos === slot.id.replace(/[0-9]/g, '') || (slot.id === 'FLEX' && ['RB', 'WR', 'TE'].includes(p.pos)));
+                        if (replacement) {
+                            slot.player = { ...replacement };
+                        }
+                    } else {
                         slot.player.opponent = matched.opponent;
                         slot.player.proj = matched.proj;
                         slot.player.salary = matched.salary;
@@ -680,8 +618,15 @@
             initAppUI();
         }
 
-        // Advanced Salary Formula with Unique Micro-Tier Offsets ($10 increments) to eliminate duplicate pricing
+        // Advanced Salary Formula with strict $3,000–$6,000 Defense range and unique micro-tier offsets ($10 increments)
         function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
+            if (position === 'DEF') {
+                // Strict Defense range between $3,000 and $6,000 based on rank and unique hash offset
+                let baseDefPrice = 3000 + ((32 - posRank) * 80);
+                let defOffset = Math.abs(hashCode(playerName) % 350);
+                return Math.min(Math.max(Math.round((baseDefPrice + defOffset) / 10) * 10, 3000), 6000);
+            }
+
             let basePrice = 4500;
             let multiplier = 220;
             
@@ -689,24 +634,16 @@
             else if (position === 'RB') { basePrice = 5000; multiplier = 252; }
             else if (position === 'WR') { basePrice = 5000; multiplier = 247; }
             else if (position === 'TE') { basePrice = 4200; multiplier = 208; }
-            else if (position === 'DEF') { 
-                // Unique DEF pricing based on rank offset
-                return 2500 + ((32 - posRank) * 40) + (Math.abs(hashCode(playerName) % 30));
-            }
 
             let matchupMultiplier = 1 + ((matchupGradeMetric - 16) / 170);
-
             let rawSalary = (basePrice + (projectedPoints * multiplier)) * matchupMultiplier;
             
-            // Add a deterministic pseudo-random unique offset ($10 to $90) based on player name hash 
-            // combined with position rank so no two players end up with identical tags.
             let uniqueHashOffset = ((hashCode(playerName) % 9) * 10) + ((posRank % 3) * 5);
             let finalSalary = Math.round((rawSalary + uniqueHashOffset) / 10) * 10;
 
             return Math.min(Math.max(finalSalary, 2500), 9600);
         }
 
-        // Helper string hash to generate distinct pricing offsets per player
         function hashCode(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -746,9 +683,7 @@
                 else emptySlots++;
 
                 const isInjuredQ1 = slot.player && slot.player.injuredQ1 && isQ1InjuredActive;
-                const oppText = slot.player && slot.player.opponent === 'BYE' ? 
-                    `<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">BYE WEEK</span>` : 
-                    (slot.player ? `${slot.player.team} (${slot.player.opponent})` : '');
+                const oppText = slot.player ? `${slot.player.team} (${slot.player.opponent})` : '';
 
                 container.innerHTML += `
                     <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50/80 transition">
@@ -791,10 +726,10 @@
         function triggerQ1Injury() {
             isQ1InjuredActive = true;
             document.getElementById('injury-banner').classList.remove('hidden');
-            const achaneSlot = rosterSlots.find(s => s.player && s.player.name.includes("Achane"));
-            if (achaneSlot) {
-                achaneSlot.player.injuredQ1 = true;
-                achaneSlot.player.proj = 0.0;
+            const targetSlot = rosterSlots.find(s => s.player);
+            if (targetSlot) {
+                targetSlot.player.injuredQ1 = true;
+                targetSlot.player.proj = 0.0;
             }
             renderLineup();
             switchTab('lineup');
@@ -825,7 +760,7 @@
             document.getElementById('bio-name').innerText = player.name;
             document.getElementById('bio-pos-badge').innerText = player.pos;
             document.getElementById('bio-team-pos').innerText = `${player.team} • Position: ${player.pos} (Rank #${player.posRank || 1})`;
-            document.getElementById('bio-opponent').innerText = player.opponent || 'vs BYE';
+            document.getElementById('bio-opponent').innerText = player.opponent || 'vs OPP';
             document.getElementById('bio-matchup-grade').innerText = player.matchupGrade || 'Neutral Spot';
             document.getElementById('bio-proj').innerText = `${player.proj} pts`;
             document.getElementById('bio-salary').innerText = `$${(player.salary || 5000).toLocaleString()}`;
@@ -849,14 +784,12 @@
             });
 
             filtered.forEach(p => {
-                const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold">BYE</span>' : p.opponent;
-
                 list.innerHTML += `
                     <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
                         <div class="flex items-center space-x-3">
                             <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${p.posRank || 1}</span>
                             <div>
-                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span></p>
+                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${p.opponent})</span></p>
                                 <p class="text-xs text-slate-500"><span class="text-indigo-600 font-bold">${p.matchupGrade}</span> • Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
                             </div>
                         </div>
@@ -881,7 +814,7 @@
                 rosterSlots[0].player = playerPool.find(p => p.pos === 'QB') || rosterSlots[0].player;
                 rosterSlots[1].player = playerPool.find(p => p.pos === 'RB') || rosterSlots[1].player;
                 rosterSlots[2].player = playerPool.filter(p => p.pos === 'RB')[1] || rosterSlots[2].player;
-                rosterSlots[3].player = playerPool.find(p => p.pos === 'WR') || rosterSlots[3].player;
+                rosterSlots[3].player = playerPool.find(p => p.pos === 'WR') || rosterSlots[0].player;
                 rosterSlots[4].player = playerPool.filter(p => p.pos === 'WR')[1] || rosterSlots[4].player;
                 rosterSlots[5].player = playerPool.filter(p => p.pos === 'WR')[2] || rosterSlots[5].player;
                 rosterSlots[6].player = playerPool.find(p => p.pos === 'TE') || rosterSlots[6].player;
@@ -903,7 +836,7 @@
         function filterPos(pos) {
             selectedPosFilter = pos;
             ['ALL', 'QB', 'RB', 'WR', 'TE', 'DEF'].forEach(p => {
-                const btn = document.getElementById(`pos-btn-${p}`);
+                let btn = document.getElementById(`pos-btn-${p}`);
                 if (btn) {
                     btn.className = p === pos ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition' : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
                 }
@@ -926,14 +859,12 @@
             });
 
             filtered.forEach(p => {
-                const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">BYE</span>' : `<span class="text-blue-600">${p.opponent}</span>`;
-
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                         <td class="py-3 px-4 font-bold text-slate-500">#${p.posRank || 1}</td>
                         <td class="py-3 px-4 font-bold text-slate-900">
                             <span class="cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name}</span> 
-                            <span class="text-xs font-semibold text-slate-500">(${p.team} ${opp})</span> 
+                            <span class="text-xs font-semibold text-slate-500">(${p.team} <span class="text-blue-600">${p.opponent}</span>)</span> 
                             <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span>
                         </td>
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
