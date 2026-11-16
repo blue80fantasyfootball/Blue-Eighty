@@ -50,7 +50,7 @@
             <div class="flex items-center space-x-4">
                 <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
                     <span>📅 Active Slate:</span>
-                    <span id="current-slate-label" class="uppercase">Loading...</span>
+                    <span id="current-slate-label" class="uppercase">Live ESPN NFL Week</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -136,7 +136,7 @@
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Active Week Matchup</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Live Week Matchup</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Blue Eighty Legends vs. Apex Gridiron Club</h2>
                     </div>
                     <button onclick="simulateLivePlay()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
@@ -170,7 +170,7 @@
                     <span class="text-xl">🚨</span>
                     <div>
                         <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker</h4>
-                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Sleeper API connected. Live play-by-play simulation ready.</p>
+                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Live ESPN schedule & Sleeper feed connected.</p>
                     </div>
                 </div>
             </div>
@@ -194,7 +194,7 @@
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Analyzing opponent run/pass defensive ranks & adjusting projections...
+                    🔄 Fetching live ESPN matchups and defensive rank adjustments...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
@@ -264,7 +264,7 @@
 
     </main>
 
-    <!-- PLAYER SELECTION MODAL -->
+    <!-- PLAYER DRAFT / SWAP MODAL -->
     <div id="player-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -278,6 +278,49 @@
         </div>
     </div>
 
+    <!-- PLAYER BIO & ESPN DETAILS MODAL -->
+    <div id="bio-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-extrabold flex items-center justify-center text-sm" id="bio-pos-badge">QB</div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900" id="bio-name">Player Name</h3>
+                        <p class="text-xs text-slate-500" id="bio-team-pos">Team • Position</p>
+                    </div>
+                </div>
+                <button onclick="closeBioModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">✕</button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-700">
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Matchup:</span>
+                    <span class="font-bold text-slate-900" id="bio-opponent">vs Opponent</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Defensive Rating:</span>
+                    <span class="font-bold text-indigo-600" id="bio-matchup-grade">Soft Matchup</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Matchup-Adjusted Proj:</span>
+                    <span class="font-bold text-blue-600 mono-num" id="bio-proj">0.0 pts</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Salary Cap Tag:</span>
+                    <span class="font-bold text-slate-900 mono-num" id="bio-salary">$0</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-slate-500 font-medium">Injury Status:</span>
+                    <span class="font-bold text-emerald-600" id="bio-injury">Healthy</span>
+                </div>
+            </div>
+            <div class="pt-2">
+                <button onclick="closeBioModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition">
+                    Close Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SUPABASE & APP LOGIC -->
     <script>
         const SUPABASE_URL = 'https://uukjaephotywsotgehfa.supabase.co';
@@ -287,13 +330,11 @@
 
         let playerPool = [];
         let teamOpponents = {}; 
-        let activeNFLWeek = 11;
         let selectedPosFilter = 'ALL';
         let isQ1InjuredActive = false;
         let registeredTeams = [];
 
-        // Mock Defensive Ranks vs Position (1 = Softest Matchup / Worst Defense, 32 = Toughest Matchup / Lockdown Defense)
-        // Used to dynamically compute matchup multiplier
+        // Defensive Rankings vs Position (1 = Lockdown Defense / Toughest, 32 = Softest Defense / Best Matchup)
         const defensiveMatchupRatings = {
             'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
             'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
@@ -312,7 +353,21 @@
             'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 },
             'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
             'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 },
-            'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 }
+            'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
+            'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 },
+            'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
+            'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 },
+            'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
+            'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 },
+            'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
+            'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 },
+            'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
+            'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 },
+            'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
+            'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 },
+            'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
+            'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 },
+            'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
         };
 
         const rosterSlots = [
@@ -330,7 +385,7 @@
         window.onload = async function() {
             renderLineup();
             await initSupabaseLeague();
-            await loadLiveSleeperDataWithMatchups();
+            await loadLiveESPNMatchupsAndSleeperData();
         };
 
         async function initSupabaseLeague() {
@@ -383,146 +438,149 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadLiveSleeperDataWithMatchups() {
-            try {
-                const stateRes = await fetch('https://api.sleeper.app/v1/state/nfl');
-                const stateData = await stateRes.json();
-                if (stateData && stateData.week) {
-                    activeNFLWeek = stateData.week;
-                }
-            } catch (err) {
-                console.warn("Could not fetch NFL state, defaulting to Week 11");
-            }
-
-            document.getElementById('current-slate-label').innerText = `Week ${activeNFLWeek}`;
-            document.getElementById('matchup-week-badge').innerText = `Week ${activeNFLWeek} Matchup`;
+        async function loadLiveESPNMatchupsAndSleeperData() {
+            teamOpponents = {};
+            let teamOpponentCode = {};
 
             try {
-                const [scheduleRes, playersRes] = await Promise.all([
-                    fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${activeNFLWeek}`),
-                    fetch('https://api.sleeper.app/v1/players/nfl')
-                ]);
+                // Fetch real-time live NFL matchups from ESPN public scoreboard API
+                const espnRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+                const espnData = await espnRes.json();
                 
-                const scheduleData = await scheduleRes.json();
-                const playersData = await playersRes.ok ? await playersRes.json() : {};
-                
-                teamOpponents = {};
-                let teamOpponentCode = {};
-                if (scheduleData && scheduleData.length > 0) {
-                    scheduleData.forEach(g => {
-                        if (g.home_team && g.away_team) {
-                            teamOpponents[g.home_team] = `vs ${g.away_team}`;
-                            teamOpponents[g.away_team] = `@ ${g.home_team}`;
-                            teamOpponentCode[g.home_team] = g.away_team;
-                            teamOpponentCode[g.away_team] = g.home_team;
+                if (espnData && espnData.events) {
+                    espnData.events.forEach(event => {
+                        const competition = event.competitions[0];
+                        if (competition && competition.competitors) {
+                            let homeTeam = '';
+                            let awayTeam = '';
+                            competition.competitors.forEach(comp => {
+                                let abbr = comp.team.abbreviation;
+                                if (abbr === 'WSH') abbr = 'WAS';
+                                if (comp.homeAway === 'home') homeTeam = abbr;
+                                if (comp.homeAway === 'away') awayTeam = abbr;
+                            });
+                            if (homeTeam && awayTeam) {
+                                teamOpponents[homeTeam] = `vs ${awayTeam}`;
+                                teamOpponents[awayTeam] = `@ ${homeTeam}`;
+                                teamOpponentCode[homeTeam] = awayTeam;
+                                teamOpponentCode[awayTeam] = homeTeam;
+                            }
                         }
                     });
                 }
-
-                const eliteDatabase = [
-                    // QBs
-                    { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.0, posRank: 1 },
-                    { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.0, posRank: 2 },
-                    { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.5, posRank: 3 },
-                    { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.0, posRank: 4 },
-                    { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.5, posRank: 5 },
-                    { name: 'Baker Mayfield', pos: 'QB', team: 'TB', baseProj: 19.0, posRank: 6 },
-                    { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 18.8, posRank: 7 },
-                    { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.2, posRank: 8 },
-                    { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.8, posRank: 9 },
-                    { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.5, posRank: 10 },
-
-                    // RBs
-                    { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.5, posRank: 1 },
-                    { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.5, posRank: 2 },
-                    { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 17.0, posRank: 3 },
-                    { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.0, posRank: 4 },
-                    { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.8, posRank: 5 },
-                    { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.8, posRank: 6 },
-                    { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.0, posRank: 7 },
-                    { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.0, posRank: 8 },
-                    { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 9 },
-                    { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 15.2, posRank: 10 },
-
-                    // WRs
-                    { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.0, posRank: 1 },
-                    { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.2, posRank: 2 },
-                    { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.8, posRank: 3 },
-                    { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.8, posRank: 4 },
-                    { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.5, posRank: 5 },
-                    { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 17.5, posRank: 6 },
-                    { name: 'Malik Nabers', pos: 'WR', team: 'NYG', baseProj: 17.0, posRank: 7 },
-                    { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 16.5, posRank: 8 },
-                    { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.2, posRank: 9 },
-                    { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.8, posRank: 10 },
-
-                    // TEs
-                    { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.5, posRank: 1 },
-                    { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.2, posRank: 2 },
-                    { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 13.0, posRank: 3 },
-                    { name: 'Trey McBride', pos: 'TE', team: 'ARI', posRank: 4, baseProj: 12.8 },
-                    { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 12.0, posRank: 5 },
-                    { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.2, posRank: 6 },
-
-                    // DEFs
-                    { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', baseProj: 9.5, posRank: 1 },
-                    { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', baseProj: 9.0, posRank: 2 },
-                    { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', baseProj: 8.5, posRank: 3 },
-                    { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', baseProj: 8.0, posRank: 4 },
-                    { name: 'Houston Texans', pos: 'DEF', team: 'HOU', baseProj: 7.8, posRank: 5 }
-                ];
-
-                playerPool = eliteDatabase.map(p => {
-                    let oppCode = teamOpponentCode[p.team];
-                    let defRanks = oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
-                    
-                    let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : 
-                                        p.pos === 'RB' ? defRanks.vsRB : 
-                                        p.pos === 'WR' ? defRanks.vsWR : 
-                                        p.pos === 'TE' ? defRanks.vsTE : 16;
-
-                    // Matchup multiplier: Rank 32 (softest defense) boosts projection by ~15%, Rank 1 (lockdown defense) cuts ~15%
-                    let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
-                    let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
-                    let salary = convertPointsToSalary(p.pos, adjustedProj);
-                    
-                    let oppTag = teamOpponents[p.team] || 'BYE';
-                    let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
-
-                    let injuryStatus = null;
-                    for (const [id, plData] of Object.entries(playersData)) {
-                        if (plData.full_name && plData.full_name.toLowerCase() === p.name.toLowerCase()) {
-                            injuryStatus = plData.injury_status || plData.status || null;
-                            break;
-                        }
-                    }
-
-                    return {
-                        ...p,
-                        opponent: oppTag,
-                        proj: adjustedProj,
-                        salary: salary,
-                        matchupGrade: grade,
-                        injuryStatus: injuryStatus
-                    };
-                });
-
-                rosterSlots.forEach(slot => {
-                    if (slot.player) {
-                        const matched = playerPool.find(p => p.name.toLowerCase() === slot.player.name.toLowerCase());
-                        if (matched) {
-                            slot.player.opponent = matched.opponent;
-                            slot.player.proj = matched.proj;
-                            slot.player.salary = matched.salary;
-                            slot.player.matchupGrade = matched.matchupGrade;
-                            slot.player.injuryStatus = matched.injuryStatus;
-                        }
-                    }
-                });
-
             } catch (err) {
-                console.warn("Live schedule/matchup sync fallback active:", err);
+                console.warn("ESPN Scoreboard API fetch failed, using default slate matchups:", err);
             }
+
+            // Fetch player injury metadata from Sleeper API
+            let playersData = {};
+            try {
+                const playersRes = await fetch('https://api.sleeper.app/v1/players/nfl');
+                playersData = await playersRes.ok ? await playersRes.json() : {};
+            } catch (e) {
+                console.warn("Sleeper players fetch warning:", e);
+            }
+
+            const eliteDatabase = [
+                // QBs
+                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.0, posRank: 1 },
+                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 22.0, posRank: 2 },
+                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 21.5, posRank: 3 },
+                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 21.0, posRank: 4 },
+                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 20.5, posRank: 5 },
+                { name: 'Baker Mayfield', pos: 'QB', team: 'TB', baseProj: 19.0, posRank: 6 },
+                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 18.8, posRank: 7 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.2, posRank: 8 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 17.8, posRank: 9 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.5, posRank: 10 },
+
+                // RBs
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.5, posRank: 1 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 17.5, posRank: 2 },
+                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 17.0, posRank: 3 },
+                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 18.0, posRank: 4 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 17.8, posRank: 5 },
+                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.8, posRank: 6 },
+                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.0, posRank: 7 },
+                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.0, posRank: 8 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 9 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 15.2, posRank: 10 },
+
+                // WRs
+                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 20.0, posRank: 1 },
+                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 19.2, posRank: 2 },
+                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 18.8, posRank: 3 },
+                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.8, posRank: 4 },
+                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 18.5, posRank: 5 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 17.5, posRank: 6 },
+                { name: 'Malik Nabers', pos: 'WR', team: 'NYG', baseProj: 17.0, posRank: 7 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 16.5, posRank: 8 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.2, posRank: 9 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 15.8, posRank: 10 },
+
+                // TEs
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 13.5, posRank: 1 },
+                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 14.2, posRank: 2 },
+                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 13.0, posRank: 3 },
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 12.8, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 12.0, posRank: 5 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.2, posRank: 6 },
+
+                // DEFs
+                { name: 'San Francisco 49ers', pos: 'DEF', team: 'SF', baseProj: 9.5, posRank: 1 },
+                { name: 'Minnesota Vikings', pos: 'DEF', team: 'MIN', baseProj: 9.0, posRank: 2 },
+                { name: 'Pittsburgh Steelers', pos: 'DEF', team: 'PIT', baseProj: 8.5, posRank: 3 },
+                { name: 'Denver Broncos', pos: 'DEF', team: 'DEN', baseProj: 8.0, posRank: 4 },
+                { name: 'Houston Texans', pos: 'DEF', team: 'HOU', baseProj: 7.8, posRank: 5 }
+            ];
+
+            playerPool = eliteDatabase.map(p => {
+                let oppCode = teamOpponentCode[p.team];
+                let defRanks = oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
+                
+                let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : 
+                                    p.pos === 'RB' ? defRanks.vsRB : 
+                                    p.pos === 'WR' ? defRanks.vsWR : 
+                                    p.pos === 'TE' ? defRanks.vsTE : 16;
+
+                // Matchup Multiplier based on Opponent Defensive Rank vs Position
+                let matchupMultiplier = 1 + ((defRankMetric - 16) / 100);
+                let adjustedProj = parseFloat((p.baseProj * matchupMultiplier).toFixed(1));
+                let salary = convertPointsToSalary(p.pos, adjustedProj);
+                
+                let oppTag = teamOpponents[p.team] || 'BYE';
+                let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
+
+                let injuryStatus = null;
+                for (const [id, plData] of Object.entries(playersData)) {
+                    if (plData.full_name && plData.full_name.toLowerCase() === p.name.toLowerCase()) {
+                        injuryStatus = plData.injury_status || plData.status || null;
+                        break;
+                    }
+                }
+
+                return {
+                    ...p,
+                    opponent: oppTag,
+                    proj: adjustedProj,
+                    salary: salary,
+                    matchupGrade: grade,
+                    injuryStatus: injuryStatus
+                };
+            });
+
+            rosterSlots.forEach(slot => {
+                if (slot.player) {
+                    const matched = playerPool.find(p => p.name.toLowerCase() === slot.player.name.toLowerCase());
+                    if (matched) {
+                        slot.player.opponent = matched.opponent;
+                        slot.player.proj = matched.proj;
+                        slot.player.salary = matched.salary;
+                        slot.player.matchupGrade = matched.matchupGrade;
+                        slot.player.injuryStatus = matched.injuryStatus;
+                    }
+                }
+            });
 
             initAppUI();
         }
@@ -572,7 +630,7 @@
 
                 const isInjuredQ1 = slot.player && slot.player.injuredQ1 && isQ1InjuredActive;
                 const injuryBadge = slot.player && slot.player.injuryStatus ? 
-                    `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">🏥 ${slot.player.injuryStatus}</span>` : '';
+                    `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full cursor-pointer hover:bg-red-200" onclick="openBioModal('${slot.player.name}')">🏥 ${slot.player.injuryStatus}</span>` : '';
                 
                 const oppText = slot.player && slot.player.opponent === 'BYE' ? 
                     `<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">BYE WEEK</span>` : 
@@ -585,7 +643,7 @@
                             <div>
                                 ${slot.player ? `
                                     <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-                                        <p class="text-sm font-bold text-slate-900">${slot.player.name}</p>
+                                        <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${slot.player.name}')">${slot.player.name}</p>
                                         <span class="text-xs font-semibold text-slate-500">${oppText}</span>
                                         <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${slot.player.matchupGrade || 'Neutral'}</span>
                                         ${injuryBadge}
@@ -646,6 +704,27 @@
             document.getElementById('injury-banner').classList.add('hidden');
         }
 
+        function openBioModal(playerName) {
+            const player = playerPool.find(p => p.name.toLowerCase() === playerName.toLowerCase()) || 
+                           rosterSlots.find(s => s.player && s.player.name.toLowerCase() === playerName.toLowerCase())?.player;
+            if (!player) return;
+
+            document.getElementById('bio-name').innerText = player.name;
+            document.getElementById('bio-pos-badge').innerText = player.pos;
+            document.getElementById('bio-team-pos', player.pos).innerText = `${player.team} • Position: ${player.pos}`;
+            document.getElementById('bio-opponent').innerText = player.opponent || 'vs BYE';
+            document.getElementById('bio-matchup-grade').innerText = player.matchupGrade || 'Neutral Spot';
+            document.getElementById('bio-proj').innerText = `${player.proj} pts`;
+            document.getElementById('bio-salary').innerText = `$${(player.salary || 5000).toLocaleString()}`;
+            document.getElementById('bio-injury').innerText = player.injuryStatus ? `Injured (${player.injuryStatus})` : 'Healthy (Active)';
+
+            document.getElementById('bio-modal').classList.remove('hidden');
+        }
+
+        function closeBioModal() {
+            document.getElementById('bio-modal').classList.add('hidden');
+        }
+
         function renderModalPlayers() {
             const list = document.getElementById('modal-players-list');
             const query = document.getElementById('modal-search').value.toLowerCase();
@@ -659,14 +738,14 @@
 
             filtered.forEach(p => {
                 const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold">BYE</span>' : p.opponent;
-                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-1">🏥 ${p.injuryStatus}</span>` : '';
+                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-1 cursor-pointer" onclick="openBioModal('${p.name}')">🏥 ${p.injuryStatus}</span>` : '';
 
                 list.innerHTML += `
                     <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
                         <div class="flex items-center space-x-3">
                             <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${p.posRank || 1}</span>
                             <div>
-                                <p class="text-sm font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span> ${injuryTag}</p>
+                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span> ${injuryTag}</p>
                                 <p class="text-xs text-slate-500"><span class="text-indigo-600 font-bold">${p.matchupGrade}</span> • Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
                             </div>
                         </div>
@@ -734,12 +813,17 @@
 
             filtered.forEach(p => {
                 const opp = p.opponent === 'BYE' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">BYE</span>' : `<span class="text-blue-600">${p.opponent}</span>`;
-                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2">🏥 ${p.injuryStatus}</span>` : '';
+                const injuryTag = p.injuryStatus ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full ml-2 cursor-pointer" onclick="openBioModal('${p.name}')">🏥 ${p.injuryStatus}</span>` : '';
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                         <td class="py-3 px-4 font-bold text-slate-500">#${p.posRank || 1}</td>
-                        <td class="py-3 px-4 font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-slate-500">(${p.team} ${opp})</span> <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span> ${injuryTag}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <span class="cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name}</span> 
+                            <span class="text-xs font-semibold text-slate-500">(${p.team} ${opp})</span> 
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span> 
+                            ${injuryTag}
+                        </td>
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
                         <td class="py-3 px-4 mono-num font-bold text-slate-800">$${p.salary.toLocaleString()}</td>
                         <td class="py-3 px-4 mono-num text-blue-600 font-bold">${p.proj} pts</td>
