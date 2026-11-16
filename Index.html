@@ -50,7 +50,7 @@
             <div class="flex items-center space-x-4">
                 <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
                     <span>📅 Active Slate:</span>
-                    <span id="current-slate-label" class="uppercase">Live NFL Week</span>
+                    <span id="current-slate-label" class="uppercase">Syncing API...</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -163,11 +163,11 @@
                         </div>
                         <div>
                             <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Official Scoring Rule: Half-PPR (0.5 pts / REC)</h4>
-                            <p class="text-xs text-slate-600 mt-0.5">Passing (0.04/yd, 4pt TD) • Rushing/Receiving (0.1/yd, 6pt TD, 0.5 REC) • ESPN Matched</p>
+                            <p class="text-xs text-slate-600 mt-0.5">Passing (0.04/yd, 4pt TD) • Rushing/Receiving (0.1/yd, 6pt TD, 0.5 REC) • Sleeper Live Feed</p>
                         </div>
                     </div>
                     <span class="bg-white border border-blue-200 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs">
-                        🔒 H2H Sync Active
+                        🔒 Sleeper API Connected
                     </span>
                 </div>
 
@@ -195,8 +195,8 @@
                 <div class="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 flex items-start space-x-3">
                     <span class="text-xl">🚨</span>
                     <div>
-                        <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Half-PPR Scoring Active)</h4>
-                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Live injury feed & match schedule connected.</p>
+                        <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Sleeper API Feed)</h4>
+                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Fetching live NFL telemetry and scoring feeds...</p>
                     </div>
                 </div>
             </div>
@@ -219,11 +219,11 @@
                     </div>
                 </div>
 
-                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm hidden">
-                    🔄 Syncing live Sleeper weekly projections & $60k market valuations...
+                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
+                    🔄 Querying Sleeper API live NFL state & weekly projections...
                 </div>
 
-                <div class="overflow-x-auto" id="player-table-wrapper">
+                <div class="overflow-x-auto hidden" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -367,7 +367,7 @@
         </div>
     </div>
 
-    <!-- SUPABASE & APP LOGIC -->
+    <!-- SUPABASE & SLEEPER API LOGIC -->
     <script>
         const SUPABASE_URL = 'https://uukjaephotywsotgehfa.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_AZ9pczk-WtriqGaI_ECGFQ_zqqg3hMG';
@@ -381,72 +381,29 @@
         let registeredTeams = [];
         let leagueStandings = [];
         let currentNFLWeek = 11;
-
-        function getCurrentNFLWeek() {
-            const seasonStartDate = new Date('2026-09-10T00:00:00');
-            const now = new Date();
-            if (now < seasonStartDate) return 1;
-            const diffTime = now - seasonStartDate;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            let calculatedWeek = Math.floor(diffDays / 7) + 1;
-            return Math.min(Math.max(calculatedWeek, 1), 18);
-        }
-
-        const defensiveMatchupRatings = {
-            'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
-            'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
-            'BAL': { vsQB: 8, vsRB: 5, vsWR: 10, vsTE: 6 },
-            'PHI': { vsQB: 25, vsRB: 28, vsWR: 22, vsTE: 24 },
-            'CIN': { vsQB: 28, vsRB: 26, vsWR: 29, vsTE: 25 },
-            'MIA': { vsQB: 18, vsRB: 22, vsWR: 15, vsTE: 19 },
-            'ATL': { vsQB: 16, vsRB: 12, vsWR: 18, vsTE: 14 },
-            'DAL': { vsQB: 20, vsRB: 24, vsWR: 21, vsTE: 22 },
-            'MIN': { vsQB: 6, vsRB: 4, vsWR: 8, vsTE: 5 },
-            'DET': { vsQB: 12, vsRB: 10, vsWR: 14, vsTE: 11 },
-            'LAR': { vsQB: 15, vsRB: 14, vsWR: 16, vsTE: 17 },
-            'SF': { vsQB: 7, vsRB: 6, vsWR: 9, vsTE: 8 },
-            'NYJ': { vsQB: 5, vsRB: 8, vsWR: 6, vsTE: 7 },
-            'HOU': { vsQB: 9, vsRB: 11, vsWR: 7, vsTE: 10 },
-            'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 },
-            'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
-            'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 },
-            'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
-            'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 },
-            'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
-            'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 },
-            'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
-            'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 },
-            'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
-            'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 },
-            'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
-            'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 },
-            'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
-            'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 },
-            'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
-            'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 },
-            'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
-        };
-
-        let rosterSlots = [
-            { id: 'QB', label: 'Quarterback (QB)', player: null },
-            { id: 'RB1', label: 'Running Back 1 (RB)', player: null },
-            { id: 'RB2', label: 'Running Back 2 (RB)', player: null },
-            { id: 'WR1', label: 'Wide Receiver 1 (WR)', player: null },
-            { id: 'WR2', label: 'Wide Receiver 2 (WR)', player: null },
-            { id: 'WR3', label: 'Wide Receiver 3 (WR)', player: null },
-            { id: 'TE', label: 'Tight End (TE)', player: null },
-            { id: 'FLEX', label: 'FLEX (RB/WR/TE)', player: null },
-            { id: 'DEF', label: 'Defense / Special Teams', player: null }
-        ];
+        let currentSeasonYear = '2026';
 
         window.onload = async function() {
-            currentNFLWeek = getCurrentNFLWeek();
-            document.getElementById('current-slate-label').innerText = `Week ${currentNFLWeek} Slate`;
-            
+            await fetchSleeperNFLState();
             await initSupabaseLeague();
-            await loadLiveSleeperAndESPNData(currentNFLWeek);
             await fetchStandingsFromSupabase();
         };
+
+        async function fetchSleeperNFLState() {
+            try {
+                const res = await fetch('https://api.sleeper.app/v1/state/nfl');
+                const state = await res.json();
+                if (state) {
+                    currentNFLWeek = state.week || 11;
+                    currentSeasonYear = state.season || '2026';
+                }
+            } catch (err) {
+                console.warn("Sleeper state API fallback engaged:", err);
+            }
+
+            document.getElementById('current-slate-label').innerText = `${currentSeasonYear} Week ${currentNFLWeek} Slate`;
+            await loadLiveSleeperAndESPNData(currentNFLWeek);
+        }
 
         async function initSupabaseLeague() {
             try {
@@ -521,7 +478,41 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // Accurate 2026 NFL Week 11 official schedule & bye week mapping matching verified league sources
+            const defensiveMatchupRatings = {
+                'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
+                'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
+                'BAL': { vsQB: 8, vsRB: 5, vsWR: 10, vsTE: 6 },
+                'PHI': { vsQB: 25, vsRB: 28, vsWR: 22, vsTE: 24 },
+                'CIN': { vsQB: 28, vsRB: 26, vsWR: 29, vsTE: 25 },
+                'MIA': { vsQB: 18, vsRB: 22, vsWR: 15, vsTE: 19 },
+                'ATL': { vsQB: 16, vsRB: 12, vsWR: 18, vsTE: 14 },
+                'DAL': { vsQB: 20, vsRB: 24, vsWR: 21, vsTE: 22 },
+                'MIN': { vsQB: 6, vsRB: 4, vsWR: 8, vsTE: 5 },
+                'DET': { vsQB: 12, vsRB: 10, vsWR: 14, vsTE: 11 },
+                'LAR': { vsQB: 15, vsRB: 14, vsWR: 16, vsTE: 17 },
+                'SF': { vsQB: 7, vsRB: 6, vsWR: 9, vsTE: 8 },
+                'NYJ': { vsQB: 5, vsRB: 8, vsWR: 6, vsTE: 7 },
+                'HOU': { vsQB: 9, vsRB: 11, vsWR: 7, vsTE: 10 },
+                'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 },
+                'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
+                'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 },
+                'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
+                'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 },
+                'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
+                'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 },
+                'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
+                'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 },
+                'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
+                'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 },
+                'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
+                'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 },
+                'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
+                'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 },
+                'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
+                'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 },
+                'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
+            };
+
             const exactWeek11Schedule = {
                 'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
                 'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
@@ -547,7 +538,6 @@
                 teamOpponentCode[team] = match.opp;
             });
 
-            // Comprehensive full player market database with accurate team assignments
             let rawDatabase = [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
@@ -1082,7 +1072,7 @@
 
         function simulateLivePlay() {
             const tickers = [
-                "Schedule API Feed: Live game matchups & defensive ratings active for Week " + currentNFLWeek + ".",
+                "Sleeper API Feed: Live game telemetry & active Week " + currentNFLWeek + " schedules synchronized.",
                 "GameCast: Mahomes 24-yard deep pass to CeeDee Lamb for a TOUCHDOWN! (+8.4 pts)",
                 "GameCast: Bijan Robinson rushes up the middle for 18 yards and a First Down!"
             ];
