@@ -552,12 +552,10 @@
             });
 
             try {
-                // Fetch live projections from Sleeper API endpoint
                 const projRes = await fetch(`https://api.sleeper.app/projections/nfl/regular/${currentSeasonYear}/${weekNum}`);
                 const projectionsMap = await projRes.json();
 
                 if (projectionsMap && Object.keys(projectionsMap).length > 0) {
-                    // Pull active player subset from Sleeper
                     const playersRes = await fetch('https://api.sleeper.app/v1/players/nfl?active=true');
                     const playersMap = await playersRes.json();
 
@@ -582,7 +580,6 @@
                     });
 
                     if (dynamicPool.length > 30) {
-                        // Successfully pulled live Sleeper projections
                         window._liveSleeperDatabase = dynamicPool;
                     }
                 }
@@ -590,7 +587,6 @@
                 console.warn("Live Sleeper Projections API fallback engaged:", err);
             }
 
-            // Fallback baseline player roster if network is restricted
             let rawDatabase = window._liveSleeperDatabase || [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
@@ -867,7 +863,10 @@
         }
 
         function autoFillCap() {
-            if (playerPool.length < 9) return;
+            if (!playerPool || playerPool.length < 9) {
+                alert("Player pool is still syncing. Please wait a moment.");
+                return;
+            }
 
             const qbs = playerPool.filter(p => p.pos === 'QB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
             const rbs = playerPool.filter(p => p.pos === 'RB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
@@ -877,10 +876,8 @@
 
             let draftedNames = new Set();
 
-            function getBudgetUnique(pool) {
-                let budgetPool = pool.slice(0, Math.max(Math.floor(pool.length / 2), 1));
-                let extendedPool = [...budgetPool, ...pool];
-                for (let p of extendedPool) {
+            function getUniqueCheapest(pool) {
+                for (let p of pool) {
                     if (!draftedNames.has(p.name)) {
                         draftedNames.add(p.name);
                         return { ...p };
@@ -890,31 +887,60 @@
             }
 
             let candidateSlots = [
-                { id: 'QB', pool: qbs, player: getBudgetUnique(qbs) },
-                { id: 'RB1', pool: rbs, player: getBudgetUnique(rbs) },
-                { id: 'RB2', pool: rbs, player: getBudgetUnique(rbs) },
-                { id: 'WR1', pool: wrs, player: getBudgetUnique(wrs) },
-                { id: 'WR2', pool: wrs, player: getBudgetUnique(wrs) },
-                { id: 'WR3', pool: wrs, player: getBudgetUnique(wrs) },
-                { id: 'TE', pool: tes, player: getBudgetUnique(tes) },
-                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getBudgetUnique([...rbs, ...wrs, ...tes]) },
-                { id: 'DEF', pool: defs, player: getBudgetUnique(defs) }
+                { id: 'QB', pool: qbs, player: getUniqueCheapest(qbs) },
+                { id: 'RB1', pool: rbs, player: getUniqueCheapest(rbs) },
+                { id: 'RB2', pool: rbs, player: getUniqueCheapest(rbs) },
+                { id: 'WR1', pool: wrs, player: getUniqueCheapest(wrs) },
+                { id: 'WR2', pool: wrs, player: getUniqueCheapest(wrs) },
+                { id: 'WR3', pool: wrs, player: getUniqueCheapest(wrs) },
+                { id: 'TE', pool: tes, player: getUniqueCheapest(tes) },
+                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getUniqueCheapest([...rbs, ...wrs, ...tes]) },
+                { id: 'DEF', pool: defs, player: getUniqueCheapest(defs) }
             ];
 
             let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
 
+            let upgradeCounter = 0;
+            while (upgradeCounter < 30) {
+                upgradeCounter++;
+                let sortedSlots = [...candidateSlots].sort((a, b) => (a.player?.proj || 0) - (b.player?.proj || 0));
+                let targetSlot = sortedSlots[0];
+
+                let matchingPool = targetSlot.id === 'QB' ? qbs :
+                                   targetSlot.id.startsWith('RB') ? rbs :
+                                   targetSlot.id.startsWith('WR') ? wrs :
+                                   targetSlot.id === 'TE' ? tes :
+                                   targetSlot.id === 'FLEX' ? [...rbs, ...wrs, ...tes] : defs;
+
+                let betterPlayer = matchingPool.find(p => !draftedNames.has(p.name) && p.proj > (targetSlot.player?.proj || 0) && (totalSalary - (targetSlot.player?.salary || 0) + p.salary) <= 60000);
+
+                if (betterPlayer) {
+                    draftedNames.delete(targetSlot.player.name);
+                    draftedNames.add(betterPlayer.name);
+                    targetSlot.player = { ...betterPlayer };
+                    totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
+                } else {
+                    break;
+                }
+            }
+
             let safetyCounter = 0;
             while (totalSalary > 60000 && safetyCounter < 50) {
                 safetyCounter++;
-                let activeSlots = candidateSlots.filter(s => s.player !== null);
-                if (activeSlots.length === 0) break;
-                activeSlots.sort((a, b) => b.player.salary - a.player.salary);
-                let targetSlot = activeSlots[0];
-                let cheaper = targetSlot.pool.find(p => p.salary < targetSlot.player.salary && !draftedNames.has(p.name));
-                if (cheaper) {
-                    draftedNames.delete(targetSlot.player.name);
-                    draftedNames.add(cheaper.name);
-                    targetSlot.player = { ...cheaper };
+                candidateSlots.sort((a, b) => (b.player?.salary || 0) - (a.player?.salary || 0));
+                let expensiveSlot = candidateSlots[0];
+
+                let matchingPool = expensiveSlot.id === 'QB' ? qbs :
+                                   expensiveSlot.id.startsWith('RB') ? rbs :
+                                   expensiveSlot.id.startsWith('WR') ? wrs :
+                                   expensiveSlot.id === 'TE' ? tes :
+                                   expensiveSlot.id === 'FLEX' ? [...rbs, ...wrs, ...tes] : defs;
+
+                let cheaperOption = matchingPool.find(p => p.salary < (expensiveSlot.player?.salary || 0) && !draftedNames.has(p.name));
+                if (cheaperOption) {
+                    draftedNames.delete(expensiveSlot.player.name);
+                    draftedNames.add(cheaperOption.name);
+                    expensiveSlot.player = { ...cheaperOption };
                 } else {
                     break;
                 }
