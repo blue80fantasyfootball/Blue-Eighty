@@ -397,7 +397,6 @@
             document.getElementById('current-slate-label').innerText = `Week ${currentNFLWeek} Slate`;
             
             await initSupabaseLeague();
-            // Await live Sleeper and ESPN data BEFORE rendering any UI
             await loadLiveSleeperAndESPNData(currentNFLWeek);
         };
 
@@ -490,12 +489,26 @@
                 console.warn("ESPN Scoreboard warning:", err);
             }
 
-            // 2. Fetch live master roster from Sleeper API
+            // 2. Fetch live master roster from Sleeper API (with daily localStorage cache)
             let sleeperRosterMap = {};
             try {
-                const sleeperRes = await fetch('https://api.sleeper.app/v1/players/nfl');
-                if (sleeperRes.ok) {
-                    sleeperRosterMap = await sleeperRes.json();
+                const cachedData = localStorage.getItem('sleeper_nfl_players_v2');
+                const cachedTime = localStorage.getItem('sleeper_cache_time_v2');
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+
+                if (cachedData && cachedTime && (Date.now() - cachedTime < twentyFourHours)) {
+                    sleeperRosterMap = JSON.parse(cachedData);
+                } else {
+                    const sleeperRes = await fetch('https://api.sleeper.app/v1/players/nfl');
+                    if (sleeperRes.ok) {
+                        sleeperRosterMap = await sleeperRes.json();
+                        try {
+                            localStorage.setItem('sleeper_nfl_players_v2', JSON.stringify(sleeperRosterMap));
+                            localStorage.setItem('sleeper_cache_time_v2', Date.now());
+                        } catch (storageErr) {
+                            console.warn("localStorage quota exceeded, skipping cache:", storageErr);
+                        }
+                    }
                 }
             } catch (err) {
                 console.warn("Sleeper API fetch warning, using fallback roster:", err);
@@ -503,32 +516,50 @@
 
             let rawDatabase = [];
 
+            // 3. Strictly filter and sort Sleeper data by search_rank & active depth chart
             if (Object.keys(sleeperRosterMap).length > 0) {
-                let qbCount = 0, rbCount = 0, wrCount = 0, teCount = 0;
-                
-                for (const [id, pl] of Object.entries(sleeperRosterMap)) {
-                    if (pl.active && pl.position && ['QB', 'RB', 'WR', 'TE'].includes(pl.position) && pl.full_name) {
-                        let pos = pl.position;
-                        let team = pl.team || 'FA';
-                        
-                        let baseProj = pos === 'QB' ? 16.0 : pos === 'RB' ? 13.5 : pos === 'WR' ? 12.5 : 10.0;
-                        if (pl.search_rank && pl.search_rank < 300) {
-                            baseProj += Math.max(0, (300 - pl.search_rank) / 30);
-                        }
-                        baseProj = parseFloat(baseProj.toFixed(1));
+                const validPlayers = Object.values(sleeperRosterMap).filter(pl => {
+                    const hasValidPos = pl.position && ['QB', 'RB', 'WR', 'TE'].includes(pl.position);
+                    const isCurrentlyActive = pl.active === true && pl.status === 'Active';
+                    const hasRealTeam = pl.team && (Object.keys(teamOpponents).length === 0 || teamOpponents[pl.team]);
+                    const isRelevant = pl.search_rank && pl.search_rank < 1500;
+                    const hasDepthChart = pl.depth_chart_order && pl.depth_chart_order <= 4;
 
-                        // Filter out players on Bye week
-                        let opp = teamOpponents[team];
-                        if (!opp) continue; 
+                    return hasValidPos && isCurrentlyActive && hasRealTeam && isRelevant && hasDepthChart;
+                });
 
-                        if (pos === 'QB' && qbCount < 20) { qbCount++; rawDatabase.push({ name: pl.full_name, pos: 'QB', team: team, baseProj: baseProj, posRank: qbCount }); }
-                        else if (pos === 'RB' && rbCount < 35) { rbCount++; rawDatabase.push({ name: pl.full_name, pos: 'RB', team: team, baseProj: baseProj, posRank: rbCount }); }
-                        else if (pos === 'WR' && wrCount < 50) { wrCount++; rawDatabase.push({ name: pl.full_name, pos: 'WR', team: team, baseProj: baseProj, posRank: wrCount }); }
-                        else if (pos === 'TE' && teCount < 30) { teCount++; rawDatabase.push({ name: pl.full_name, pos: 'TE', team: team, baseProj: baseProj, posRank: teCount }); }
-                    }
-                }
+                // Sort ascending by search_rank so current top starters appear first
+                validPlayers.sort((a, b) => a.search_rank - b.search_rank);
+
+                const topQBs = validPlayers.filter(p => p.position === 'QB').slice(0, 15);
+                const topRBs = validPlayers.filter(p => p.position === 'RB').slice(0, 25);
+                const topWRs = validPlayers.filter(p => p.position === 'WR').slice(0, 40);
+                const topTEs = validPlayers.filter(p => p.position === 'TE').slice(0, 25);
+
+                const combinedPool = [...topQBs, ...topRBs, ...topWRs, ...topTEs];
+                const posCounters = { QB: 0, RB: 0, WR: 0, TE: 0 };
+
+                combinedPool.forEach(pl => {
+                    posCounters[pl.position]++;
+                    const rank = posCounters[pl.position];
+
+                    let baseProj = 10.0;
+                    if (pl.position === 'QB') baseProj = Math.max(12.0, 24.5 - (rank * 0.65));
+                    else if (pl.position === 'RB') baseProj = Math.max(8.0, 20.5 - (rank * 0.42));
+                    else if (pl.position === 'WR') baseProj = Math.max(8.0, 21.0 - (rank * 0.30));
+                    else if (pl.position === 'TE') baseProj = Math.max(6.5, 15.5 - (rank * 0.35));
+
+                    rawDatabase.push({
+                        name: pl.full_name,
+                        pos: pl.position,
+                        team: pl.team,
+                        baseProj: parseFloat(baseProj.toFixed(1)),
+                        posRank: rank
+                    });
+                });
             }
 
+            // Fallback curated database if API is offline
             if (rawDatabase.length < 30) {
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 23.4, posRank: 1 },
@@ -552,17 +583,19 @@
                 ];
             }
 
-            // Add all 32 NFL Defenses rated between $3,000 and $6,000
+            // Add active NFL Defenses rated between $3,000 and $6,000 (excluding Bye weeks)
             const nflTeamsList = ['SF', 'MIN', 'PIT', 'DEN', 'HOU', 'BAL', 'KC', 'BUF', 'NYJ', 'PHI', 'GB', 'CHI', 'SEA', 'LAC', 'CLE', 'DAL', 'DET', 'MIA', 'TB', 'CIN', 'ATL', 'IND', 'WAS', 'ARI', 'NE', 'NYG', 'LV', 'LAR', 'NO', 'CAR', 'TEN', 'JAX'];
-            nflTeamsList.forEach((teamCode, idx) => {
+            let defRankCounter = 0;
+            nflTeamsList.forEach(teamCode => {
                 let opp = teamOpponents[teamCode];
-                if (opp) {
+                if (opp || Object.keys(teamOpponents).length === 0) {
+                    defRankCounter++;
                     rawDatabase.push({
                         name: `${teamCode} Defense`,
                         pos: 'DEF',
                         team: teamCode,
-                        baseProj: parseFloat((9.5 - (idx * 0.2)).toFixed(1)),
-                        posRank: idx + 1
+                        baseProj: parseFloat((9.5 - ((defRankCounter - 1) * 0.2)).toFixed(1)),
+                        posRank: defRankCounter
                     });
                 }
             });
@@ -593,17 +626,23 @@
                 };
             });
 
-            // Populate initial starting lineup automatically if empty
+            // Populate initial starting lineup automatically from live pool
             if (rosterSlots[0].player === null && playerPool.length > 5) {
-                rosterSlots[0].player = { ...playerPool.find(p => p.pos === 'QB') } || null;
-                rosterSlots[1].player = { ...playerPool.find(p => p.pos === 'RB') } || null;
-                rosterSlots[2].player = { ...playerPool.filter(p => p.pos === 'RB')[1] } || null;
-                rosterSlots[3].player = { ...playerPool.find(p => p.pos === 'WR') } || null;
-                rosterSlots[4].player = { ...playerPool.filter(p => p.pos === 'WR')[1] } || null;
-                rosterSlots[5].player = { ...playerPool.filter(p => p.pos === 'WR')[2] } || null;
-                rosterSlots[6].player = { ...playerPool.find(p => p.pos === 'TE') } || null;
-                rosterSlots[7].player = { ...playerPool.filter(p => p.pos === 'RB')[2] } || null;
-                rosterSlots[8].player = { ...playerPool.find(p => p.pos === 'DEF') } || null;
+                const qbs = playerPool.filter(p => p.pos === 'QB');
+                const rbs = playerPool.filter(p => p.pos === 'RB');
+                const wrs = playerPool.filter(p => p.pos === 'WR');
+                const tes = playerPool.filter(p => p.pos === 'TE');
+                const defs = playerPool.filter(p => p.pos === 'DEF');
+
+                rosterSlots[0].player = qbs[0] ? { ...qbs[0] } : null;
+                rosterSlots[1].player = rbs[0] ? { ...rbs[0] } : null;
+                rosterSlots[2].player = rbs[1] ? { ...rbs[1] } : null;
+                rosterSlots[3].player = wrs[0] ? { ...wrs[0] } : null;
+                rosterSlots[4].player = wrs[1] ? { ...wrs[1] } : null;
+                rosterSlots[5].player = wrs[2] ? { ...wrs[2] } : null;
+                rosterSlots[6].player = tes[0] ? { ...tes[0] } : null;
+                rosterSlots[7].player = rbs[2] ? { ...rbs[2] } : null;
+                rosterSlots[8].player = defs[0] ? { ...defs[0] } : null;
             }
 
             initAppUI();
@@ -800,15 +839,21 @@
 
         function autoFillCap() {
             if (playerPool.length > 5) {
-                rosterSlots[0].player = { ...playerPool.find(p => p.pos === 'QB') } || rosterSlots[0].player;
-                rosterSlots[1].player = { ...playerPool.find(p => p.pos === 'RB') } || rosterSlots[1].player;
-                rosterSlots[2].player = { ...playerPool.filter(p => p.pos === 'RB')[1] } || rosterSlots[2].player;
-                rosterSlots[3].player = { ...playerPool.find(p => p.pos === 'WR') } || rosterSlots[3].player;
-                rosterSlots[4].player = { ...playerPool.filter(p => p.pos === 'WR')[1] } || rosterSlots[4].player;
-                rosterSlots[5].player = { ...playerPool.filter(p => p.pos === 'WR')[2] } || rosterSlots[5].player;
-                rosterSlots[6].player = { ...playerPool.find(p => p.pos === 'TE') } || rosterSlots[6].player;
-                rosterSlots[7].player = { ...playerPool.filter(p => p.pos === 'RB')[2] } || rosterSlots[7].player;
-                rosterSlots[8].player = { ...playerPool.find(p => p.pos === 'DEF') } || rosterSlots[8].player;
+                const qbs = playerPool.filter(p => p.pos === 'QB');
+                const rbs = playerPool.filter(p => p.pos === 'RB');
+                const wrs = playerPool.filter(p => p.pos === 'WR');
+                const tes = playerPool.filter(p => p.pos === 'TE');
+                const defs = playerPool.filter(p => p.pos === 'DEF');
+
+                rosterSlots[0].player = qbs[0] ? { ...qbs[0] } : rosterSlots[0].player;
+                rosterSlots[1].player = rbs[0] ? { ...rbs[0] } : rosterSlots[1].player;
+                rosterSlots[2].player = rbs[1] ? { ...rbs[1] } : rosterSlots[2].player;
+                rosterSlots[3].player = wrs[0] ? { ...wrs[0] } : rosterSlots[3].player;
+                rosterSlots[4].player = wrs[1] ? { ...wrs[1] } : rosterSlots[4].player;
+                rosterSlots[5].player = wrs[2] ? { ...wrs[2] } : rosterSlots[5].player;
+                rosterSlots[6].player = tes[0] ? { ...tes[0] } : rosterSlots[6].player;
+                rosterSlots[7].player = rbs[2] ? { ...rbs[2] } : rosterSlots[7].player;
+                rosterSlots[8].player = defs[0] ? { ...defs[0] } : rosterSlots[8].player;
             }
             isQ1InjuredActive = false;
             document.getElementById('injury-banner').classList.add('hidden');
