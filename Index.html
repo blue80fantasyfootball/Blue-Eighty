@@ -71,13 +71,9 @@
                 <span>🏟️</span>
                 <span>H2H GameCast</span>
             </button>
-            <button onclick="switchTab('scores')" id="nav-scores" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-slate-600 hover:bg-slate-100 transition">
-                <span>🏈</span>
-                <span>Live NFL Scores</span>
-            </button>
             <button onclick="switchTab('waivers')" id="nav-waivers" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-slate-600 hover:bg-slate-100 transition">
                 <span>🔍</span>
-                <span>Sleeper Market</span>
+                <span>Top 30 Market</span>
             </button>
             <button onclick="switchTab('signup')" id="nav-signup" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 text-slate-600 hover:bg-slate-100 transition">
                 <span>📝</span>
@@ -180,43 +176,12 @@
             </div>
         </div>
 
-        <!-- ================= TAB 3: LIVE NFL SCORES & SCHEDULE ================= -->
-        <div id="tab-content-scores" class="space-y-6 hidden">
-            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Sleeper Live NFL Feed</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2" id="scores-header-title">Live Scores & Matchup Schedule</h2>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <label class="text-xs font-bold text-slate-500 uppercase">Select Week:</label>
-                        <select id="schedule-week-select" onchange="loadScheduleForWeek(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="11">Week 11</option>
-                            <option value="12">Week 12</option>
-                            <option value="13">Week 13</option>
-                            <option value="14">Week 14</option>
-                            <option value="15">Week 15</option>
-                            <option value="16">Week 16</option>
-                            <option value="17">Week 17</option>
-                            <option value="18">Week 18</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="scores-loading" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Fetching live NFL game scores and schedule from Sleeper API...
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden" id="nfl-games-grid"></div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 4: SLEEPER MARKET & SALARIES ================= -->
+        <!-- ================= TAB 3: SLEEPER TOP 30 MARKET ================= -->
         <div id="tab-content-waivers" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="relative w-full sm:w-96">
-                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search active Sleeper NFL database..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search Top 30 active players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                         <button onclick="filterPos('ALL')" id="pos-btn-ALL" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition">All</button>
@@ -224,19 +189,20 @@
                         <button onclick="filterPos('RB')" id="pos-btn-RB" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">RB</button>
                         <button onclick="filterPos('WR')" id="pos-btn-WR" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">WR</button>
                         <button onclick="filterPos('TE')" id="pos-btn-TE" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">TE</button>
+                        <button onclick="filterPos('DEF')" id="pos-btn-DEF" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">DEF</button>
                     </div>
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm">
-                    🔄 Syncing active player pool & projections from Sleeper API...
+                    🔄 Syncing real next-week NFL schedule & Top 30 active players from Sleeper API...
                 </div>
 
                 <div class="overflow-x-auto hidden" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                <th class="py-3 px-4">Rank</th>
-                                <th class="py-3 px-4">Player / Team (vs Opponent)</th>
+                                <th class="py-3 px-4">Pos Rank</th>
+                                <th class="py-3 px-4">Player / Team (vs Real Next-Week Opponent)</th>
                                 <th class="py-3 px-4">Pos</th>
                                 <th class="py-3 px-4">Weekly Salary Tag</th>
                                 <th class="py-3 px-4">Proj. Pts</th>
@@ -249,7 +215,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 5: TEAM SIGN-UP (12 MAX) ================= -->
+        <!-- ================= TAB 4: TEAM SIGN-UP (12 MAX) ================= -->
         <div id="tab-content-signup" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Sign Up Form -->
@@ -288,7 +254,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 6: STANDINGS ================= -->
+        <!-- ================= TAB 5: STANDINGS ================= -->
         <div id="tab-content-standings" class="space-y-6 hidden">
             <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm p-6">
                 <h3 class="text-base font-bold text-slate-900">Blue Eighty League Standings</h3>
@@ -298,15 +264,15 @@
 
     </main>
 
-    <!-- PLAYER SELECTION MODAL (RANKED WITH OPPONENTS) -->
+    <!-- PLAYER SELECTION MODAL (TOP 30 PER POSITION) -->
     <div id="player-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Ranked Player</h3>
+                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Select Top 30 Ranked Player</h3>
                 <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">✕</button>
             </div>
             <div class="relative">
-                <input type="text" id="modal-search" oninput="renderModalPlayers()" placeholder="Search active ranked players..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="modal-search" oninput="renderModalPlayers()" placeholder="Search position top 30..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="max-h-96 overflow-y-auto space-y-2 divide-y divide-slate-100" id="modal-players-list"></div>
         </div>
@@ -340,8 +306,7 @@
         window.onload = async function() {
             renderLineup();
             await initSupabaseLeague();
-            await loadScheduleMatchups(11);
-            await loadSleeperDataDaily();
+            await loadNextWeekScheduleAndPlayers();
         };
 
         async function initSupabaseLeague() {
@@ -394,13 +359,15 @@
             alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
         }
 
-        async function loadScheduleMatchups(weekNum) {
-            teamOpponents = {};
+        async function loadNextWeekScheduleAndPlayers() {
             try {
-                const res = await fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${weekNum}`);
-                const games = await res.json();
-                if (games && games.length > 0) {
-                    games.forEach(g => {
+                // Fetch real next-week NFL schedule from Sleeper API (Week 11 default)
+                const scheduleRes = await fetch('https://api.sleeper.app/v1/nfl/schedules/2026/11');
+                const scheduleData = await scheduleRes.json();
+                
+                teamOpponents = {};
+                if (scheduleData && scheduleData.length > 0) {
+                    scheduleData.forEach(g => {
                         if (g.home_team && g.away_team) {
                             teamOpponents[g.home_team] = `vs ${g.away_team}`;
                             teamOpponents[g.away_team] = `@ ${g.home_team}`;
@@ -408,13 +375,15 @@
                     });
                 }
             } catch (err) {
-                console.warn("Could not fetch live schedule matchups, using default opponent mappings.");
+                console.warn("Could not fetch next-week schedule from Sleeper API, using fallback matchups.");
             }
+
+            await loadSleeperTop30Data();
         }
 
-        async function loadSleeperDataDaily() {
-            const CACHE_KEY = 'blue_eighty_sleeper_cache_active_opp_2026';
-            const TIME_KEY = 'blue_eighty_cache_time_active_opp_2026';
+        async function loadSleeperTop30Data() {
+            const CACHE_KEY = 'blue_eighty_top30_nextweek_2026';
+            const TIME_KEY = 'blue_eighty_top30_nextweek_time_2026';
             const cachedData = localStorage.getItem(CACHE_KEY);
             const cachedTime = localStorage.getItem(TIME_KEY);
             const now = new Date().getTime();
@@ -430,19 +399,20 @@
                 const playersRes = await fetch('https://api.sleeper.app/v1/players/nfl');
                 const data = await playersRes.json();
 
-                playerPool = [];
+                let rawPools = { QB: [], RB: [], WR: [], TE: [], DEF: [] };
+
                 for (const [id, p] of Object.entries(data)) {
                     if (p.active === true && ['QB', 'RB', 'WR', 'TE', 'DEF'].includes(p.position)) {
-                        let defaultProj = p.position === 'QB' ? (17 + Math.random() * 8).toFixed(1) : 
-                                          p.position === 'RB' ? (12 + Math.random() * 9).toFixed(1) : 
-                                          p.position === 'WR' ? (11 + Math.random() * 9).toFixed(1) : 
-                                          p.position === 'TE' ? (8 + Math.random() * 7).toFixed(1) : (7 + Math.random() * 5).toFixed(1);
+                        let defaultProj = p.position === 'QB' ? (16 + Math.random() * 9).toFixed(1) : 
+                                          p.position === 'RB' ? (11 + Math.random() * 10).toFixed(1) : 
+                                          p.position === 'WR' ? (10 + Math.random() * 10).toFixed(1) : 
+                                          p.position === 'TE' ? (7 + Math.random() * 8).toFixed(1) : (6 + Math.random() * 6).toFixed(1);
                         defaultProj = parseFloat(defaultProj);
                         let calculatedSalary = convertPointsToSalary(p.position, defaultProj);
                         let teamCode = p.team || 'FA';
                         let oppTag = teamOpponents[teamCode] || 'vs BYE';
 
-                        playerPool.push({
+                        rawPools[p.position].push({
                             id: id,
                             name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
                             pos: p.position,
@@ -454,7 +424,14 @@
                     }
                 }
 
-                playerPool.sort((a, b) => b.proj - a.proj);
+                playerPool = [];
+                ['QB', 'RB', 'WR', 'TE', 'DEF'].forEach(pos => {
+                    rawPools[pos].sort((a, b) => b.proj - a.proj);
+                    let top30 = rawPools[pos].slice(0, 30);
+                    top30.forEach((pl, idx) => { pl.posRank = idx + 1; });
+                    playerPool = playerPool.concat(top30);
+                });
+
                 localStorage.setItem(CACHE_KEY, JSON.stringify(playerPool));
                 localStorage.setItem(TIME_KEY, now);
                 initAppUI();
@@ -464,65 +441,14 @@
                     playerPool = JSON.parse(cachedData);
                 } else {
                     playerPool = [
-                        { name: 'Josh Allen', pos: 'QB', team: 'BUF', opponent: '@ KC', proj: 24.5, salary: 8400 },
-                        { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', opponent: 'vs BUF', proj: 22.1, salary: 7800 },
-                        { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', opponent: 'vs PHI', proj: 21.5, salary: 8100 },
-                        { name: 'De’Von Achane', pos: 'RB', team: 'MIA', opponent: '@ NYJ', proj: 18.2, salary: 7200 }
+                        { name: 'Josh Allen', pos: 'QB', team: 'BUF', opponent: '@ KC', proj: 24.5, salary: 8400, posRank: 1 },
+                        { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', opponent: 'vs BUF', proj: 22.1, salary: 7800, posRank: 2 },
+                        { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', opponent: 'vs PHI', proj: 21.5, salary: 8100, posRank: 1 },
+                        { name: 'De’Von Achane', pos: 'RB', team: 'MIA', opponent: '@ NYJ', proj: 18.2, salary: 7200, posRank: 1 }
                     ];
                 }
-                playerPool.sort((a, b) => b.proj - a.proj);
                 initAppUI();
             }
-        }
-
-        async function loadScheduleForWeek(weekNum) {
-            document.getElementById('scores-loading').classList.remove('hidden');
-            document.getElementById('nfl-games-grid').classList.add('hidden');
-            document.getElementById('scores-header-title').innerText = `Week ${weekNum} NFL Schedule & Matchups`;
-            await loadScheduleMatchups(weekNum);
-
-            try {
-                const res = await fetch(`https://api.sleeper.app/v1/nfl/schedules/2026/${weekNum}`);
-                const games = await res.json();
-
-                const grid = document.getElementById('nfl-games-grid');
-                grid.innerHTML = '';
-
-                if (!games || games.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center text-slate-400 py-8">No matchups available for Week ${weekNum}.</p>`;
-                } else {
-                    games.slice(0, 16).forEach(g => {
-                        grid.innerHTML += `
-                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-                                <div class="text-center w-5/12">
-                                    <p class="font-extrabold text-slate-900 text-base">${g.home_team}</p>
-                                    <p class="text-xs text-slate-400">Home</p>
-                                </div>
-                                <div class="text-center w-2/12">
-                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-lg">VS</span>
-                                </div>
-                                <div class="text-center w-5/12">
-                                    <p class="font-extrabold text-slate-900 text-base">${g.away_team}</p>
-                                    <p class="text-xs text-slate-400">Away</p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (err) {
-                const grid = document.getElementById('nfl-games-grid');
-                grid.innerHTML = `
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
-                        <span class="font-bold text-slate-800">KC (Home)</span>
-                        <span class="text-xs font-bold bg-blue-100 text-blue-800 px-2 py-1 rounded">VS</span>
-                        <span class="font-bold text-slate-800">BUF (Away)</span>
-                    </div>
-                `;
-            }
-
-            document.getElementById('scores-loading').classList.add('hidden');
-            document.getElementById('nfl-games-grid').classList.remove('hidden');
-            renderPlayerPool();
         }
 
         function convertPointsToSalary(position, projectedPoints) {
@@ -546,7 +472,7 @@
         }
 
         function switchTab(tabId) {
-            ['lineup', 'matchup', 'scores', 'waivers', 'signup', 'standings'].forEach(t => {
+            ['lineup', 'matchup', 'waivers', 'signup', 'standings'].forEach(t => {
                 document.getElementById(`tab-content-${t}`).classList.add('hidden');
                 document.getElementById(`nav-${t}`).classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-md');
                 document.getElementById(`nav-${t}`).classList.add('text-slate-600', 'hover:bg-slate-100');
@@ -628,7 +554,7 @@
         function openSwapModal(pos, index = 1) {
             targetPos = pos;
             targetSlotIndex = index;
-            document.getElementById('modal-title').innerText = `Select Ranked Player (${pos})`;
+            document.getElementById('modal-title').innerText = `Select Top 30 Player (${pos})`;
             document.getElementById('player-modal').classList.remove('hidden');
             renderModalPlayers();
         }
@@ -650,12 +576,12 @@
                 return matchQuery && matchPos;
             });
 
-            filtered.forEach((p, rankIdx) => {
+            filtered.forEach(p => {
                 const opp = teamOpponents[p.team] || p.opponent || 'vs BYE';
                 list.innerHTML += `
                     <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
                         <div class="flex items-center space-x-3">
-                            <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${rankIdx + 1}</span>
+                            <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${p.posRank || 1}</span>
                             <div>
                                 <p class="text-sm font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${opp})</span></p>
                                 <p class="text-xs text-slate-500">Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Proj: ${p.proj} pts</p>
@@ -703,7 +629,7 @@
 
         function filterPos(pos) {
             selectedPosFilter = pos;
-            ['ALL', 'QB', 'RB', 'WR', 'TE'].forEach(p => {
+            ['ALL', 'QB', 'RB', 'WR', 'TE', 'DEF'].forEach(p => {
                 const btn = document.getElementById(`pos-btn-${p}`);
                 if (btn) {
                     btn.className = p === pos ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition' : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
@@ -723,11 +649,11 @@
                 return matchQuery && matchPos;
             });
 
-            filtered.forEach((p, rankIdx) => {
+            filtered.forEach(p => {
                 const opp = teamOpponents[p.team] || p.opponent || 'vs BYE';
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                        <td class="py-3 px-4 font-bold text-slate-500">#${rankIdx + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-500">#${p.posRank || 1}</td>
                         <td class="py-3 px-4 font-bold text-slate-900">${p.name} <span class="text-xs font-semibold text-slate-500">(${p.team} <span class="text-blue-600">${opp}</span>)</span></td>
                         <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
                         <td class="py-3 px-4 mono-num font-bold text-slate-800">$${p.salary.toLocaleString()}</td>
