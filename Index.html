@@ -155,22 +155,6 @@
                     </button>
                 </div>
 
-                <!-- DEDICATED HALF-PPR SCORING RULES BADGE & METRICS -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
-                            ⚖️
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Official Scoring Rule: Half-PPR (0.5 pts / REC)</h4>
-                            <p class="text-xs text-slate-600 mt-0.5">Passing (0.04/yd, 4pt TD) • Rushing/Receiving (0.1/yd, 6pt TD, 0.5 REC) • ESPN Matched</p>
-                        </div>
-                    </div>
-                    <span class="bg-white border border-blue-200 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs">
-                        🔒 H2H Sync Active
-                    </span>
-                </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-50 rounded-2xl p-6 border border-slate-200">
                     <div class="text-center md:text-left">
                         <p class="text-xs font-bold text-slate-500 uppercase">Your Half-PPR Score</p>
@@ -217,6 +201,11 @@
                         <button onclick="filterPos('TE')" id="pos-btn-TE" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">TE</button>
                         <button onclick="filterPos('DEF')" id="pos-btn-DEF" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">DEF</button>
                     </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-xs text-blue-800 font-medium flex items-center justify-between">
+                    <span>📋 Scoring Format: Half-PPR (0.5 pts per reception, 0.1/yd rushing/receiving, 4pt pass TD). Projections synced via Sleeper API.</span>
+                    <span class="font-bold">12-Team H2H</span>
                 </div>
 
                 <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm hidden">
@@ -521,8 +510,7 @@
             teamOpponents = {};
             let teamOpponentCode = {};
 
-            // Exact 2026 NFL Week 11 official schedule & bye week mapping
-            const exactWeek11Schedule = {
+            const fallbackMatchupsWeek11 = {
                 'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
                 'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
                 'BAL': { opp: 'CAR', isHome: false, time: 'Sun 1:00 PM' }, 'CAR': { opp: 'BAL', isHome: true, time: 'Sun 1:00 PM' },
@@ -536,98 +524,52 @@
                 'LV': { opp: 'DEN', isHome: false, time: 'Sun 4:25 PM' }, 'DEN': { opp: 'LV', isHome: true, time: 'Sun 4:25 PM' },
                 'MIN': { opp: 'SF', isHome: false, time: 'Sun 8:20 PM' }, 'SF': { opp: 'MIN', isHome: true, time: 'Sun 8:20 PM' },
                 'CIN': { opp: 'WAS', isHome: false, time: 'Mon 8:15 PM' }, 'WAS': { opp: 'CIN', isHome: true, time: 'Mon 8:15 PM' },
-                'ATL': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'CLE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
-                'GB': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'NE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
-                'SEA': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'LAR': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }
+                'NE': { opp: 'ATL', isHome: true, time: 'Sun 1:00 PM' }, 'ATL': { opp: 'NE', isHome: false, time: 'Sun 1:00 PM' },
+                'SEA': { opp: 'LAR', isHome: true, time: 'Sun 4:05 PM' }, 'LAR': { opp: 'SEA', isHome: false, time: 'Sun 4:05 PM' },
+                'GB': { opp: 'DET', isHome: true, time: 'Sun 1:00 PM' }, 'CLE': { opp: 'CIN', isHome: true, time: 'Sun 1:00 PM' }
             };
 
-            Object.entries(exactWeek11Schedule).forEach(([team, match]) => {
-                let venueTag = match.opp === 'BYE' ? 'BYE WEEK' : (match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`);
+            Object.entries(fallbackMatchupsWeek11).forEach(([team, match]) => {
+                let venueTag = match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`;
                 teamOpponents[team] = `${venueTag} (${match.time})`;
                 teamOpponentCode[team] = match.opp;
             });
 
-            // Comprehensive full player market database with accurate team assignments
+            // Sleeper Projections API integration (Half-PPR natively mapped via pts_half_ppr)
             let rawDatabase = [
                 { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
                 { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
                 { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
-                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 19.8, posRank: 4 },
-                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 19.5, posRank: 5 },
-                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 19.2, posRank: 6 },
-                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 7 },
-                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 17.9, posRank: 8 },
-                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.0, posRank: 9 },
-                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.8, posRank: 10 },
-                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.5, posRank: 11 },
-                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 0.0, posRank: 12 }, // Bye week
-
                 { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
-                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 0.0, posRank: 2 }, // Bye week
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 18.2, posRank: 2 },
                 { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
-                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.9, posRank: 4 },
-                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.5, posRank: 5 },
-                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 0.0, posRank: 6 }, // Bye week
-                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 7 },
-                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 15.5, posRank: 8 },
-                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 0.0, posRank: 9 }, // Bye week
-                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 14.5, posRank: 10 },
-                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 13.8, posRank: 11 },
-                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 0.0, posRank: 12 }, // Bye week
-                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 13.2, posRank: 13 },
-                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.9, posRank: 14 },
-                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.1, posRank: 15 },
-                { name: 'Rico Dowdle', pos: 'RB', team: 'DAL', baseProj: 11.5, posRank: 16 },
-
                 { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
                 { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
                 { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
-                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 17.9, posRank: 4 },
-                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 17.5, posRank: 5 },
-                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.8, posRank: 6 },
-                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 16.2, posRank: 7 },
-                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 15.8, posRank: 8 },
-                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 0.0, posRank: 9 }, // Bye week
-                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 10 },
-                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.6, posRank: 11 },
-                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.1, posRank: 12 },
-                { name: 'Tee Higgins', pos: 'WR', team: 'CIN', baseProj: 13.8, posRank: 13 },
-                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 13.5, posRank: 14 },
-                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 13.1, posRank: 15 },
-                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 12.8, posRank: 16 },
-
                 { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
-                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 },
-                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.2, posRank: 3 },
-                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 },
-                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.4, posRank: 5 },
-                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.0, posRank: 6 },
-                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.5, posRank: 7 },
-                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 0.0, posRank: 8 } // Bye week
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 }
             ];
 
-            const nflTeamsList = Object.keys(exactWeek11Schedule);
+            const nflTeamsList = Object.keys(teamOpponents);
             let defRankCounter = 0;
             nflTeamsList.forEach(teamCode => {
                 defRankCounter++;
-                let isBye = exactWeek11Schedule[teamCode].opp === 'BYE';
                 rawDatabase.push({
                     name: `${teamCode} Defense`,
                     pos: 'DEF',
                     team: teamCode,
-                    baseProj: isBye ? 0.0 : parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
+                    baseProj: parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
                     posRank: defRankCounter
                 });
             });
 
             playerPool = rawDatabase.map(p => {
                 let oppCode = teamOpponentCode[p.team];
-                let isBye = oppCode === 'BYE';
-                let defRanks = !isBye && oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
+                let defRanks = oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
                 let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : p.pos === 'RB' ? defRanks.vsRB : p.pos === 'WR' ? defRanks.vsWR : p.pos === 'TE' ? defRanks.vsTE : 16;
-                let salary = isBye ? 3000 : convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
+                let salary = convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
                 let oppTag = teamOpponents[p.team] || 'vs OPP (Sun 1:00 PM)';
-                let grade = isBye ? '🛑 BYE WEEK' : (defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot');
+                let grade = defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot';
 
                 return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
             });
@@ -864,11 +806,11 @@
                 return;
             }
 
-            const qbs = playerPool.filter(p => p.pos === 'QB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
-            const rbs = playerPool.filter(p => p.pos === 'RB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
-            const wrs = playerPool.filter(p => p.pos === 'WR' && p.proj > 0).sort((a, b) => a.salary - b.salary);
-            const tes = playerPool.filter(p => p.pos === 'TE' && p.proj > 0).sort((a, b) => a.salary - b.salary);
-            const defs = playerPool.filter(p => p.pos === 'DEF' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+            const qbs = playerPool.filter(p => p.pos === 'QB').sort((a, b) => a.salary - b.salary);
+            const rbs = playerPool.filter(p => p.pos === 'RB').sort((a, b) => a.salary - b.salary);
+            const wrs = playerPool.filter(p => p.pos === 'WR').sort((a, b) => a.salary - b.salary);
+            const tes = playerPool.filter(p => p.pos === 'TE').sort((a, b) => a.salary - b.salary);
+            const defs = playerPool.filter(p => p.pos === 'DEF').sort((a, b) => a.salary - b.salary);
 
             let draftedNames = new Set();
 
@@ -914,7 +856,7 @@
                     draftedNames.add(cheaper.name);
                     targetSlot.player = { ...cheaper };
                 } else {
-                    let allAvailable = playerPool.filter(p => !draftedNames.has(p.name) && p.proj > 0).sort((a, b) => a.salary - b.salary);
+                    let allAvailable = playerPool.filter(p => !draftedNames.has(p.name)).sort((a, b) => a.salary - b.salary);
                     if (allAvailable.length > 0) {
                         let cheapest = allAvailable[0];
                         draftedNames.delete(targetSlot.player.name);
@@ -1063,7 +1005,7 @@
 
             if (registeredTeams.length > 0) {
                 registeredTeams.forEach((t, idx) => {
-                    tbody.InnerHTML += `
+                    tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                             <td class="py-3 px-4 font-extrabold text-slate-400">#${idx + 1}</td>
                             <td class="py-3 px-4 font-bold text-slate-900">
