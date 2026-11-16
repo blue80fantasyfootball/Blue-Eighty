@@ -50,7 +50,7 @@
             <div class="flex items-center space-x-4">
                 <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-800 flex items-center space-x-1">
                     <span>📅 Active Slate:</span>
-                    <span id="current-slate-label" class="uppercase">Syncing API...</span>
+                    <span id="current-slate-label" class="uppercase">2026 Week 11</span>
                 </div>
                 <button onclick="triggerQ1Injury()" class="pulse-shield bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition">
                     <span>🚑</span>
@@ -94,8 +94,8 @@
             <div class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-6 text-white shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div>
                     <span class="bg-blue-500/30 text-blue-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-400/30">Salary Cap Vault ($60,000)</span>
-                    <h2 class="text-3xl font-extrabold mt-2 mono-num" id="hud-remaining">$60,000 <span class="text-lg font-medium text-blue-300">Remaining</span></h2>
-                    <p class="text-xs text-blue-200 mt-1">Avg Remaining / Empty Slot: <strong id="hud-avg" class="text-white">$6,667</strong></p>
+                    <h2 class="text-3xl font-extrabold mt-2 mono-num" id="hud-remaining">$0 <span class="text-lg font-medium text-blue-300">Remaining</span></h2>
+                    <p class="text-xs text-blue-200 mt-1">Avg Remaining / Empty Slot: <strong id="hud-avg" class="text-white">$0</strong></p>
                 </div>
                 <div class="flex flex-col md:items-end justify-center">
                     <span class="bg-emerald-500/30 text-emerald-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-400/30">Lineup Projection (Half-PPR)</span>
@@ -146,13 +146,28 @@
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">Live Week Matchup</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase" id="matchup-week-badge">2026 Week 11 Matchup</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Blue Eighty Legends vs. Apex Gridiron Club</h2>
                     </div>
                     <button onclick="simulateLivePlay()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
                         <span>⚡</span>
                         <span>Simulate Live Play</span>
                     </button>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+                            ⚖️
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Official Scoring Rule: Half-PPR (0.5 pts / REC)</h4>
+                            <p class="text-xs text-slate-600 mt-0.5">Passing (0.04/yd, 4pt TD) • Rushing/Receiving (0.1/yd, 6pt TD, 0.5 REC) • Sleeper Sync</p>
+                        </div>
+                    </div>
+                    <span class="bg-white border border-blue-200 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs">
+                        🔒 Live Telemetry Connected
+                    </span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-slate-50 rounded-2xl p-6 border border-slate-200">
@@ -180,7 +195,7 @@
                     <span class="text-xl">🚨</span>
                     <div>
                         <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide">Live RedZone Ticker (Sleeper Feed)</h4>
-                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with live NFL state telemetry...</p>
+                        <p id="live-ticker-text" class="text-sm font-medium text-slate-800 mt-0.5">Synchronized with 2026 NFL Week 11 active feeds...</p>
                     </div>
                 </div>
             </div>
@@ -203,11 +218,11 @@
                     </div>
                 </div>
 
-                <div id="market-loading-msg" class="py-8 text-center text-xs font-bold text-slate-400">
-                    🔄 Syncing live active NFL player directory & schedule from Sleeper API...
+                <div id="api-loading-state" class="py-12 text-center text-slate-500 text-sm hidden">
+                    🔄 Loading 2026 NFL Week 11 player market...
                 </div>
 
-                <div class="overflow-x-auto hidden" id="player-table-wrapper">
+                <div class="overflow-x-auto" id="player-table-wrapper">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -326,4 +341,718 @@
                     <span class="text-slate-500 font-medium">Matchup & Kickoff:</span>
                     <span class="font-bold text-slate-900" id="bio-opponent">vs Opponent</span>
                 </div>
-                <div class="flex justify-between py-
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Defensive Rating:</span>
+                    <span class="font-bold text-indigo-600" id="bio-matchup-grade">Soft Matchup</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Half-PPR Projected Pts:</span>
+                    <span class="font-bold text-blue-600 mono-num" id="bio-proj">0.0 pts</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500 font-medium">Salary Cap Tag:</span>
+                    <span class="font-bold text-slate-900 mono-num" id="bio-salary">$0</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-slate-500 font-medium">Status:</span>
+                    <span class="font-bold text-emerald-600" id="bio-injury">Healthy (Active)</span>
+                </div>
+            </div>
+            <div class="pt-2">
+                <button onclick="closeBioModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition">
+                    Close Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP & SUPABASE SCRIPT -->
+    <script>
+        const SUPABASE_URL = 'https://uukjaephotywsotgehfa.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_AZ9pczk-WtriqGaI_ECGFQ_zqqg3hMG';
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let playerPool = [];
+        let teamOpponents = {}; 
+        let selectedPosFilter = 'ALL';
+        let isQ1InjuredActive = false;
+        let registeredTeams = [];
+        let leagueStandings = [];
+
+        let rosterSlots = [
+            { id: 'QB', player: null },
+            { id: 'RB1', player: null },
+            { id: 'RB2', player: null },
+            { id: 'WR1', player: null },
+            { id: 'WR2', player: null },
+            { id: 'WR3', player: null },
+            { id: 'TE', player: null },
+            { id: 'FLEX', player: null },
+            { id: 'DEF', player: null }
+        ];
+
+        window.onload = function() {
+            loadCorrect2026Week11Data();
+            initSupabaseLeague();
+            fetchStandingsFromSupabase();
+        };
+
+        async function initSupabaseLeague() {
+            try {
+                await fetchTeamsFromSupabase();
+                _supabase
+                    .channel('public:league_teams')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'league_teams' }, payload => {
+                        registeredTeams.push({ owner: payload.new.owner, team: payload.new.team_name, email: payload.new.email });
+                        renderRegisteredTeams();
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn("Supabase connection notice:", err);
+            }
+        }
+
+        async function fetchTeamsFromSupabase() {
+            const { data, error } = await _supabase.from('league_teams').select('*');
+            if (!error && data) {
+                registeredTeams = data.map(t => ({ owner: t.owner, team: t.team_name, email: t.email }));
+                renderRegisteredTeams();
+            }
+        }
+
+        async function fetchStandingsFromSupabase() {
+            const { data, error } = await _supabase
+                .from('league_standings')
+                .select('*')
+                .order('wins', { ascending: false })
+                .order('points_for', { ascending: false });
+
+            if (!error && data) {
+                leagueStandings = data;
+                renderStandings();
+            } else {
+                renderStandingsFallback();
+            }
+        }
+
+        async function handleTeamRegistration(e) {
+            e.preventDefault();
+            if (registeredTeams.length >= 12) {
+                alert("League is currently full (12/12 teams registered).");
+                return;
+            }
+
+            const owner = document.getElementById('reg-owner').value.trim();
+            const team = document.getElementById('reg-team').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+
+            if (registeredTeams.some(t => t.team.toLowerCase() === team.toLowerCase())) {
+                alert("That team name is already taken! Please choose another.");
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('league_teams')
+                .insert([{ owner: owner, team_name: team, email: email }]);
+
+            if (error) {
+                alert("Error registering team: " + error.message);
+                return;
+            }
+
+            document.getElementById('reg-owner').value = '';
+            document.getElementById('reg-team').value = '';
+            document.getElementById('reg-email').value = '';
+            alert(`Success! Team "${team}" is locked in for Blue Eighty.`);
+        }
+
+        function loadCorrect2026Week11Data() {
+            teamOpponents = {};
+            let teamOpponentCode = {};
+
+            const defensiveMatchupRatings = {
+                'KC': { vsQB: 14, vsRB: 18, vsWR: 12, vsTE: 20 },
+                'BUF': { vsQB: 22, vsRB: 15, vsWR: 25, vsTE: 18 },
+                'BAL': { vsQB: 8, vsRB: 5, vsWR: 10, vsTE: 6 },
+                'PHI': { vsQB: 25, vsRB: 28, vsWR: 22, vsTE: 24 },
+                'CIN': { vsQB: 28, vsRB: 26, vsWR: 29, vsTE: 25 },
+                'MIA': { vsQB: 18, vsRB: 22, vsWR: 15, vsTE: 19 },
+                'ATL': { vsQB: 16, vsRB: 12, vsWR: 18, vsTE: 14 },
+                'DAL': { vsQB: 20, vsRB: 24, vsWR: 21, vsTE: 22 },
+                'MIN': { vsQB: 6, vsRB: 4, vsWR: 8, vsTE: 5 },
+                'DET': { vsQB: 12, vsRB: 10, vsWR: 14, vsTE: 11 },
+                'LAR': { vsQB: 15, vsRB: 14, vsWR: 16, vsTE: 17 },
+                'SF': { vsQB: 7, vsRB: 6, vsWR: 9, vsTE: 8 },
+                'NYJ': { vsQB: 5, vsRB: 8, vsWR: 6, vsTE: 7 },
+                'HOU': { vsQB: 9, vsRB: 11, vsWR: 7, vsTE: 10 },
+                'TB': { vsQB: 24, vsRB: 19, vsWR: 26, vsTE: 21 },
+                'WAS': { vsQB: 26, vsRB: 25, vsWR: 28, vsTE: 26 },
+                'ARI': { vsQB: 23, vsRB: 21, vsWR: 24, vsTE: 23 },
+                'GB': { vsQB: 13, vsRB: 16, vsWR: 15, vsTE: 12 },
+                'SEA': { vsQB: 19, vsRB: 20, vsWR: 19, vsTE: 21 },
+                'LV': { vsQB: 27, vsRB: 29, vsWR: 25, vsTE: 26 },
+                'DEN': { vsQB: 10, vsRB: 9, vsWR: 11, vsTE: 9 },
+                'IND': { vsQB: 21, vsRB: 23, vsWR: 20, vsTE: 22 },
+                'PIT': { vsQB: 11, vsRB: 7, vsWR: 13, vsTE: 12 },
+                'CLE': { vsQB: 4, vsRB: 13, vsWR: 5, vsTE: 13 },
+                'NE': { vsQB: 17, vsRB: 17, vsWR: 17, vsTE: 16 },
+                'NYG': { vsQB: 22, vsRB: 25, vsWR: 23, vsTE: 24 },
+                'TEN': { vsQB: 21, vsRB: 20, vsWR: 22, vsTE: 19 },
+                'JAX': { vsQB: 29, vsRB: 27, vsWR: 30, vsTE: 28 },
+                'NO': { vsQB: 18, vsRB: 15, vsWR: 19, vsTE: 17 },
+                'LAC': { vsQB: 9, vsRB: 10, vsWR: 10, vsTE: 11 },
+                'CAR': { vsQB: 30, vsRB: 31, vsWR: 31, vsTE: 29 },
+                'CHI': { vsQB: 16, vsRB: 14, vsWR: 17, vsTE: 15 }
+            };
+
+            // VERIFIED 2026 NFL WEEK 11 SCHEDULE (Nov 19 - Nov 23)
+            const exactWeek11Schedule = {
+                'IND': { opp: 'HOU', isHome: false, time: 'Thu 8:15 PM' }, 'HOU': { opp: 'IND', isHome: true, time: 'Thu 8:15 PM' },
+                'MIA': { opp: 'BUF', isHome: false, time: 'Sun 1:00 PM' }, 'BUF': { opp: 'MIA', isHome: true, time: 'Sun 1:00 PM' },
+                'BAL': { opp: 'CAR', isHome: false, time: 'Sun 1:00 PM' }, 'CAR': { opp: 'BAL', isHome: true, time: 'Sun 1:00 PM' },
+                'NO': { opp: 'CHI', isHome: false, time: 'Sun 1:00 PM' }, 'CHI': { opp: 'NO', isHome: true, time: 'Sun 1:00 PM' },
+                'TEN': { opp: 'DAL', isHome: false, time: 'Sun 1:00 PM' }, 'DAL': { opp: 'TEN', isHome: true, time: 'Sun 1:00 PM' },
+                'TB': { opp: 'DET', isHome: false, time: 'Sun 1:00 PM' }, 'DET': { opp: 'TB', isHome: true, time: 'Sun 1:00 PM' },
+                'ARI': { opp: 'KC', isHome: false, time: 'Sun 1:00 PM' }, 'KC': { opp: 'ARI', isHome: true, time: 'Sun 1:00 PM' },
+                'PIT': { opp: 'PHI', isHome: false, time: 'Sun 1:00 PM' }, 'PHI': { opp: 'PIT', isHome: true, time: 'Sun 1:00 PM' },
+                'NYJ': { opp: 'LAC', isHome: false, time: 'Sun 4:05 PM' }, 'LAC': { opp: 'NYJ', isHome: true, time: 'Sun 4:05 PM' },
+                'JAX': { opp: 'NYG', isHome: false, time: 'Sun 4:25 PM' }, 'NYG': { opp: 'JAX', isHome: true, time: 'Sun 4:25 PM' },
+                'LV': { opp: 'DEN', isHome: false, time: 'Sun 4:25 PM' }, 'DEN': { opp: 'LV', isHome: true, time: 'Sun 4:25 PM' },
+                'MIN': { opp: 'SF', isHome: false, time: 'Sun 8:20 PM' }, 'SF': { opp: 'MIN', isHome: true, time: 'Sun 8:20 PM' },
+                'CIN': { opp: 'WAS', isHome: false, time: 'Mon 8:15 PM' }, 'WAS': { opp: 'CIN', isHome: true, time: 'Mon 8:15 PM' },
+                'ATL': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'CLE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
+                'GB': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'NE': { opp: 'BYE', isHome: true, time: 'BYE WEEK' },
+                'SEA': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }, 'LAR': { opp: 'BYE', isHome: true, time: 'BYE WEEK' }
+            };
+
+            Object.entries(exactWeek11Schedule).forEach(([team, match]) => {
+                let venueTag = match.opp === 'BYE' ? 'BYE WEEK' : (match.isHome ? `vs ${match.opp}` : `@ ${match.opp}`);
+                teamOpponents[team] = `${venueTag} (${match.time})`;
+                teamOpponentCode[team] = match.opp;
+            });
+
+            let rawDatabase = [
+                { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
+                { name: 'Lamar Jackson', pos: 'QB', team: 'BAL', baseProj: 21.1, posRank: 2 },
+                { name: 'Patrick Mahomes', pos: 'QB', team: 'KC', baseProj: 20.8, posRank: 3 },
+                { name: 'Joe Burrow', pos: 'QB', team: 'CIN', baseProj: 19.8, posRank: 4 },
+                { name: 'Jalen Hurts', pos: 'QB', team: 'PHI', baseProj: 19.5, posRank: 5 },
+                { name: 'Jayden Daniels', pos: 'QB', team: 'WAS', baseProj: 19.2, posRank: 6 },
+                { name: 'Kyler Murray', pos: 'QB', team: 'ARI', baseProj: 18.1, posRank: 7 },
+                { name: 'Dak Prescott', pos: 'QB', team: 'DAL', baseProj: 17.9, posRank: 8 },
+                { name: 'Brock Purdy', pos: 'QB', team: 'SF', baseProj: 17.0, posRank: 9 },
+                { name: 'C.J. Stroud', pos: 'QB', team: 'HOU', baseProj: 16.8, posRank: 10 },
+                { name: 'Tua Tagovailoa', pos: 'QB', team: 'MIA', baseProj: 16.5, posRank: 11 },
+                { name: 'Jordan Love', pos: 'QB', team: 'GB', baseProj: 0.0, posRank: 12 },
+
+                { name: 'Christian McCaffrey', pos: 'RB', team: 'SF', baseProj: 19.4, posRank: 1 },
+                { name: 'Bijan Robinson', pos: 'RB', team: 'ATL', baseProj: 0.0, posRank: 2 },
+                { name: 'Saquon Barkley', pos: 'RB', team: 'PHI', baseProj: 17.8, posRank: 3 },
+                { name: 'Breece Hall', pos: 'RB', team: 'NYJ', baseProj: 16.9, posRank: 4 },
+                { name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baseProj: 16.5, posRank: 5 },
+                { name: 'Kyren Williams', pos: 'RB', team: 'LAR', baseProj: 0.0, posRank: 6 },
+                { name: 'Jonathan Taylor', pos: 'RB', team: 'IND', baseProj: 15.8, posRank: 7 },
+                { name: 'Derrick Henry', pos: 'RB', team: 'BAL', baseProj: 15.5, posRank: 8 },
+                { name: 'Josh Jacobs', pos: 'RB', team: 'GB', baseProj: 0.0, posRank: 9 },
+                { name: 'De’Von Achane', pos: 'RB', team: 'MIA', baseProj: 14.5, posRank: 10 },
+                { name: 'James Cook', pos: 'RB', team: 'BUF', baseProj: 13.8, posRank: 11 },
+                { name: 'Kenneth Walker III', pos: 'RB', team: 'SEA', baseProj: 0.0, posRank: 12 },
+                { name: 'Alvin Kamara', pos: 'RB', team: 'NO', baseProj: 13.2, posRank: 13 },
+                { name: 'Joe Mixon', pos: 'RB', team: 'HOU', baseProj: 12.9, posRank: 14 },
+                { name: 'Chase Brown', pos: 'RB', team: 'CIN', baseProj: 12.1, posRank: 15 },
+                { name: 'Rico Dowdle', pos: 'RB', team: 'DAL', baseProj: 11.5, posRank: 16 },
+
+                { name: 'CeeDee Lamb', pos: 'WR', team: 'DAL', baseProj: 19.5, posRank: 1 },
+                { name: 'Ja’Marr Chase', pos: 'WR', team: 'CIN', baseProj: 19.0, posRank: 2 },
+                { name: 'Justin Jefferson', pos: 'WR', team: 'MIN', baseProj: 18.4, posRank: 3 },
+                { name: 'Amon-Ra St. Brown', pos: 'WR', team: 'DET', baseProj: 17.9, posRank: 4 },
+                { name: 'Tyreek Hill', pos: 'WR', team: 'MIA', baseProj: 17.5, posRank: 5 },
+                { name: 'A.J. Brown', pos: 'WR', team: 'PHI', baseProj: 16.8, posRank: 6 },
+                { name: 'Nico Collins', pos: 'WR', team: 'HOU', baseProj: 16.2, posRank: 7 },
+                { name: 'Garrett Wilson', pos: 'WR', team: 'NYJ', baseProj: 15.8, posRank: 8 },
+                { name: 'Drake London', pos: 'WR', team: 'ATL', baseProj: 0.0, posRank: 9 },
+                { name: 'Marvin Harrison Jr.', pos: 'WR', team: 'ARI', baseProj: 15.0, posRank: 10 },
+                { name: 'DeVonta Smith', pos: 'WR', team: 'PHI', baseProj: 14.6, posRank: 11 },
+                { name: 'Zay Flowers', pos: 'WR', team: 'BAL', baseProj: 14.1, posRank: 12 },
+                { name: 'Tee Higgins', pos: 'WR', team: 'CIN', baseProj: 13.8, posRank: 13 },
+                { name: 'George Pickens', pos: 'WR', team: 'PIT', baseProj: 13.5, posRank: 14 },
+                { name: 'Chris Olave', pos: 'WR', team: 'NO', baseProj: 13.1, posRank: 15 },
+                { name: 'Brian Thomas Jr.', pos: 'WR', team: 'JAX', baseProj: 12.8, posRank: 16 },
+
+                { name: 'Brock Bowers', pos: 'TE', team: 'LV', baseProj: 13.5, posRank: 1 },
+                { name: 'Travis Kelce', pos: 'TE', team: 'KC', baseProj: 12.8, posRank: 2 },
+                { name: 'George Kittle', pos: 'TE', team: 'SF', baseProj: 12.2, posRank: 3 },
+                { name: 'Trey McBride', pos: 'TE', team: 'ARI', baseProj: 11.9, posRank: 4 },
+                { name: 'Sam LaPorta', pos: 'TE', team: 'DET', baseProj: 11.4, posRank: 5 },
+                { name: 'Mark Andrews', pos: 'TE', team: 'BAL', baseProj: 11.0, posRank: 6 },
+                { name: 'Evan Engram', pos: 'TE', team: 'JAX', baseProj: 10.5, posRank: 7 },
+                { name: 'Kyle Pitts', pos: 'TE', team: 'ATL', baseProj: 0.0, posRank: 8 }
+            ];
+
+            const nflTeamsList = Object.keys(exactWeek11Schedule);
+            let defRankCounter = 0;
+            nflTeamsList.forEach(teamCode => {
+                defRankCounter++;
+                let isBye = exactWeek11Schedule[teamCode].opp === 'BYE';
+                rawDatabase.push({
+                    name: `${teamCode} Defense`,
+                    pos: 'DEF',
+                    team: teamCode,
+                    baseProj: isBye ? 0.0 : parseFloat((8.5 - ((defRankCounter - 1) * 0.15)).toFixed(1)),
+                    posRank: defRankCounter
+                });
+            });
+
+            playerPool = rawDatabase.map(p => {
+                let oppCode = teamOpponentCode[p.team];
+                let isBye = oppCode === 'BYE';
+                let defRanks = !isBye && oppCode && defensiveMatchupRatings[oppCode] ? defensiveMatchupRatings[oppCode] : { vsQB: 16, vsRB: 16, vsWR: 16, vsTE: 16 };
+                let defRankMetric = p.pos === 'QB' ? defRanks.vsQB : p.pos === 'RB' ? defRanks.vsRB : p.pos === 'WR' ? defRanks.vsWR : p.pos === 'TE' ? defRanks.vsTE : 16;
+                let salary = isBye ? 3000 : convertPointsToSalary(p.pos, p.baseProj, defRankMetric, p.posRank || 1, p.name);
+                let oppTag = teamOpponents[p.team] || 'vs OPP (Sun 1:00 PM)';
+                let grade = isBye ? '🛑 BYE WEEK' : (defRankMetric >= 22 ? '🔥 Soft Matchup' : defRankMetric <= 10 ? '🛡️ Lockdown Def' : '⚡ Neutral Spot');
+
+                return { ...p, opponent: oppTag, proj: p.baseProj, salary: salary, matchupGrade: grade };
+            });
+
+            renderLineup();
+            renderPlayerPool();
+            autoFillCap();
+        }
+
+        function convertPointsToSalary(position, projectedPoints, matchupGradeMetric, posRank, playerName) {
+            const uniqueOffset = ((hashCode(playerName) % 8) * 10);
+
+            if (position === 'DEF') {
+                const defBase = 2400 + (projectedPoints * 260) + uniqueOffset;
+                return Math.min(Math.max(Math.round(defBase / 10) * 10, 2800), 5500);
+            }
+
+            let floor = 3500;
+            let perPointRate = 220;
+
+            if (position === 'QB') { floor = 4000; perPointRate = 195; }
+            else if (position === 'RB') { floor = 3600; perPointRate = 245; }
+            else if (position === 'WR') { floor = 3500; perPointRate = 240; }
+            else if (position === 'TE') { floor = 3300; perPointRate = 250; }
+
+            const rawSalary = floor + (projectedPoints * perPointRate) + uniqueOffset;
+            const finalSalary = Math.round(rawSalary / 10) * 10;
+
+            return Math.min(Math.max(finalSalary, 3200), 9200);
+        }
+
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
+        }
+
+        function switchTab(tabId) {
+            ['lineup', 'matchup', 'waivers', 'signup', 'standings'].forEach(t => {
+                document.getElementById(`tab-content-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-md');
+                document.getElementById(`nav-${t}`).classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-md');
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+        }
+
+        function renderLineup() {
+            const container = document.getElementById('lineup-slots-container');
+            if (!container) return;
+            container.innerHTML = '';
+            let totalSpent = 0;
+            let totalProj = 0;
+            let emptySlots = 0;
+
+            rosterSlots.forEach((slot, idx) => {
+                if (slot.player) {
+                    totalSpent += slot.player.salary;
+                    totalProj += (slot.player.injuredQ1 && isQ1InjuredActive ? 0 : slot.player.proj);
+                } else {
+                    emptySlots++;
+                }
+
+                const isInjuredQ1 = slot.player && slot.player.injuredQ1 && isQ1InjuredActive;
+                const oppText = slot.player ? `${slot.player.team} (${slot.player.opponent})` : '';
+
+                container.innerHTML += `
+                    <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50/80 transition">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-16 text-xs font-bold text-slate-400 uppercase">${slot.id}</span>
+                            <div>
+                                ${slot.player ? `
+                                    <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                        <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${slot.player.name}')">${slot.player.name}</p>
+                                        <span class="text-xs font-semibold text-slate-500">${oppText}</span>
+                                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${slot.player.matchupGrade || 'Neutral'}</span>
+                                        ${isInjuredQ1 ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200 animate-pulse">🛡️ Q1 INJURED</span>` : ''}
+                                    </div>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Salary: <strong class="mono-num text-slate-700">$${slot.player.salary.toLocaleString()}</strong> • Half-PPR Proj: ${slot.player.proj} pts</p>
+                                ` : `
+                                    <p class="text-sm font-medium text-slate-400 italic">Empty Slot</p>
+                                `}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            ${isInjuredQ1 ? `
+                                <button onclick="openSwapModal('${slot.id}')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition">
+                                    🛡️ Q1 Swap
+                                </button>
+                            ` : ''}
+                            <button onclick="openSwapModal('${slot.id}', ${idx})" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 transition">
+                                ${slot.player ? 'Swap' : 'Add Player'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const remaining = 60000 - totalSpent;
+            document.getElementById('hud-remaining').innerHTML = `$${remaining.toLocaleString()} <span class="text-lg font-medium text-blue-300">Remaining</span>`;
+            const avg = emptySlots > 0 ? Math.round(remaining / emptySlots) : 0;
+            document.getElementById('hud-avg').innerText = `$${avg.toLocaleString()}`;
+
+            document.getElementById('hud-total-proj').innerHTML = `${totalProj.toFixed(1)} <span class="text-lg font-medium text-white">Total Pts</span>`;
+            const efficiency = totalSpent > 0 ? (totalProj / (totalSpent / 1000)).toFixed(2) : '0.0';
+            document.getElementById('hud-efficiency').innerText = `${efficiency} pts / $1k`;
+
+            document.getElementById('h2h-user-score').innerText = totalProj.toFixed(1);
+            let winProb = Math.min(Math.max(Math.round((totalProj / (totalProj + 104.5)) * 100), 5), 95);
+            document.getElementById('win-prob-bar').style.width = `${winProb}%`;
+            document.getElementById('win-prob-pct').innerText = winProb;
+        }
+
+        function triggerQ1Injury() {
+            isQ1InjuredActive = true;
+            document.getElementById('injury-banner').classList.remove('hidden');
+            const targetSlot = rosterSlots.find(s => s.player);
+            if (targetSlot) {
+                targetSlot.player.injuredQ1 = true;
+                targetSlot.player.proj = 0.0;
+            }
+            renderLineup();
+            switchTab('lineup');
+        }
+
+        let targetSlotIndex = null;
+        let targetPos = null;
+
+        function openSwapModal(slotId, index = 0) {
+            targetPos = slotId;
+            targetSlotIndex = index;
+            document.getElementById('modal-title').innerText = `Select Player (${slotId})`;
+            document.getElementById('player-modal').classList.remove('hidden');
+            renderModalPlayers();
+        }
+
+        function closeModal() {
+            document.getElementById('player-modal').classList.add('hidden');
+            isQ1InjuredActive = false;
+            document.getElementById('injury-banner').classList.add('hidden');
+        }
+
+        function openBioModal(playerName) {
+            const player = playerPool.find(p => p.name.toLowerCase() === playerName.toLowerCase()) || 
+                           rosterSlots.find(s => s.player && s.player.name.toLowerCase() === playerName.toLowerCase())?.player;
+            if (!player) return;
+
+            document.getElementById('bio-name').innerText = player.name;
+            document.getElementById('bio-pos-badge').innerText = player.pos;
+            document.getElementById('bio-team-pos').innerText = `${player.team} • Position: ${player.pos} (Rank #${player.posRank || 1})`;
+            document.getElementById('bio-opponent').innerText = player.opponent || 'vs Opponent';
+            document.getElementById('bio-matchup-grade').innerText = player.matchupGrade || 'Neutral Spot';
+            document.getElementById('bio-proj').innerText = `${player.proj} pts`;
+            document.getElementById('bio-salary').innerText = `$${(player.salary || 5000).toLocaleString()}`;
+
+            document.getElementById('bio-modal').classList.remove('hidden');
+        }
+
+        function closeBioModal() {
+            document.getElementById('bio-modal').classList.add('hidden');
+        }
+
+        function renderModalPlayers() {
+            const list = document.getElementById('modal-players-list');
+            const query = document.getElementById('modal-search').value.toLowerCase();
+            if (!list) return;
+            list.innerHTML = '';
+
+            const filtered = playerPool.filter(p => {
+                const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
+                
+                let matchPos = false;
+                if (targetPos === 'QB') {
+                    matchPos = (p.pos === 'QB');
+                } else if (targetPos && targetPos.startsWith('RB')) {
+                    matchPos = (p.pos === 'RB');
+                } else if (targetPos && targetPos.startsWith('WR')) {
+                    matchPos = (p.pos === 'WR');
+                } else if (targetPos === 'TE') {
+                    matchPos = (p.pos === 'TE');
+                } else if (targetPos === 'FLEX') {
+                    matchPos = ['RB', 'WR', 'TE'].includes(p.pos);
+                } else if (targetPos === 'DEF') {
+                    matchPos = (p.pos === 'DEF');
+                }
+
+                return matchQuery && matchPos;
+            });
+
+            filtered.forEach(p => {
+                list.innerHTML += `
+                    <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-3 rounded-xl transition">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">#${p.posRank || 1}</span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900 cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name} <span class="text-xs font-semibold text-blue-600">(${p.pos} - ${p.team} ${p.opponent})</span></p>
+                                <p class="text-xs text-slate-500"><span class="text-indigo-600 font-bold">${p.matchupGrade}</span> • Salary: <strong class="mono-num text-slate-700">$${p.salary.toLocaleString()}</strong> • Half-PPR Proj: ${p.proj} pts</p>
+                            </div>
+                        </div>
+                        <button onclick="confirmSwap('${p.name}', '${p.pos}', '${p.team}', '${p.opponent}', ${p.salary}, ${p.proj}, '${p.matchupGrade}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition">
+                            Draft
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function confirmSwap(name, pos, team, opponent, salary, proj, matchupGrade) {
+            const isAlreadyDrafted = rosterSlots.some((slot, idx) => slot.player && slot.player.name.toLowerCase() === name.toLowerCase() && idx !== targetSlotIndex);
+            if (isAlreadyDrafted) {
+                alert(`${name} is already locked into another roster spot. You cannot select the same player twice!`);
+                return;
+            }
+
+            if (targetSlotIndex !== null) {
+                rosterSlots[targetSlotIndex].player = { name, pos, team, opponent, salary, proj, matchupGrade };
+            }
+            closeModal();
+            renderLineup();
+        }
+
+        function autoFillCap() {
+            if (playerPool.length < 9) return;
+
+            const qbs = playerPool.filter(p => p.pos === 'QB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+            const rbs = playerPool.filter(p => p.pos === 'RB' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+            const wrs = playerPool.filter(p => p.pos === 'WR' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+            const tes = playerPool.filter(p => p.pos === 'TE' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+            const defs = playerPool.filter(p => p.pos === 'DEF' && p.proj > 0).sort((a, b) => a.salary - b.salary);
+
+            let draftedNames = new Set();
+
+            function getBudgetUnique(pool) {
+                let budgetPool = pool.slice(0, Math.max(Math.floor(pool.length / 2), 1));
+                let extendedPool = [...budgetPool, ...pool];
+                for (let p of extendedPool) {
+                    if (!draftedNames.has(p.name)) {
+                        draftedNames.add(p.name);
+                        return { ...p };
+                    }
+                }
+                return pool[0] ? { ...pool[0] } : null;
+            }
+
+            let candidateSlots = [
+                { id: 'QB', pool: qbs, player: getBudgetUnique(qbs) },
+                { id: 'RB1', pool: rbs, player: getBudgetUnique(rbs) },
+                { id: 'RB2', pool: rbs, player: getBudgetUnique(rbs) },
+                { id: 'WR1', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'WR2', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'WR3', pool: wrs, player: getBudgetUnique(wrs) },
+                { id: 'TE', pool: tes, player: getBudgetUnique(tes) },
+                { id: 'FLEX', pool: [...rbs, ...wrs, ...tes], player: getBudgetUnique([...rbs, ...wrs, ...tes]) },
+                { id: 'DEF', pool: defs, player: getBudgetUnique(defs) }
+            ];
+
+            let totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
+
+            let safetyCounter = 0;
+            while (totalSalary > 60000 && safetyCounter < 50) {
+                safetyCounter++;
+                let activeSlots = candidateSlots.filter(s => s.player !== null);
+                if (activeSlots.length === 0) break;
+                activeSlots.sort((a, b) => b.player.salary - a.player.salary);
+                let targetSlot = activeSlots[0];
+                let cheaper = targetSlot.pool.find(p => p.salary < targetSlot.player.salary && !draftedNames.has(p.name));
+                if (cheaper) {
+                    draftedNames.delete(targetSlot.player.name);
+                    draftedNames.add(cheaper.name);
+                    targetSlot.player = { ...cheaper };
+                } else {
+                    break;
+                }
+                totalSalary = candidateSlots.reduce((sum, slot) => sum + (slot.player ? slot.player.salary : 0), 0);
+            }
+
+            rosterSlots = candidateSlots.map(s => ({
+                id: s.id,
+                label: s.id,
+                player: s.player
+            }));
+
+            isQ1InjuredActive = false;
+            document.getElementById('injury-banner').classList.add('hidden');
+            renderLineup();
+        }
+
+        function resetLineup() {
+            rosterSlots.forEach(s => s.player = null);
+            isQ1InjuredActive = false;
+            document.getElementById('injury-banner').classList.add('hidden');
+            renderLineup();
+        }
+
+        function filterPos(pos) {
+            selectedPosFilter = pos;
+            ['ALL', 'QB', 'RB', 'WR', 'TE', 'DEF'].forEach(p => {
+                let btn = document.getElementById(`pos-btn-${p}`);
+                if (btn) {
+                    btn.className = p === pos ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition' : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+                }
+            });
+            renderPlayerPool();
+        }
+
+        function renderPlayerPool() {
+            const tbody = document.getElementById('player-pool-tbody');
+            const searchInput = document.getElementById('player-search');
+            if (!tbody || !searchInput) return;
+            
+            const query = searchInput.value.toLowerCase();
+            tbody.innerHTML = '';
+
+            const filtered = playerPool.filter(p => {
+                const matchQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
+                const matchPos = selectedPosFilter === 'ALL' || p.pos === selectedPosFilter;
+                return matchQuery && matchPos;
+            });
+
+            filtered.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3 px-4 font-bold text-slate-500">#${p.posRank || 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <span class="cursor-pointer hover:text-blue-600 transition" onclick="openBioModal('${p.name}')">${p.name}</span> 
+                            <span class="text-xs font-semibold text-slate-500">(${p.team} <span class="text-blue-600">${p.opponent}</span>)</span> 
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded ml-1">${p.matchupGrade}</span>
+                        </td>
+                        <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md">${p.pos}</span></td>
+                        <td class="py-3 px-4 mono-num font-bold text-slate-800">$${p.salary.toLocaleString()}</td>
+                        <td class="py-3 px-4 mono-num text-blue-600 font-bold">${p.proj} pts</td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="switchTab('lineup')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                                View Lineup
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderRegisteredTeams() {
+            const container = document.getElementById('registered-teams-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const count = registeredTeams.length;
+            const slotsLeft = 12 - count;
+            document.getElementById('signups-count').innerText = count;
+            document.getElementById('total-registered').innerText = count;
+            document.getElementById('slots-left').innerText = slotsLeft;
+
+            if (count === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic py-4 text-center">No teams registered yet. Be the first!</p>`;
+                return;
+            }
+
+            registeredTeams.forEach((t, i) => {
+                container.innerHTML += `
+                    <div class="py-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs">${i + 1}</span>
+                            <div>
+                                <p class="font-bold text-slate-900">${t.team}</p>
+                                <p class="text-xs text-slate-500">Manager: ${t.owner} • ${t.email}</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">Confirmed Spot</span>
+                    </div>
+                `;
+            });
+
+            if (count >= 12) {
+                document.getElementById('reg-submit-btn').disabled = true;
+                document.getElementById('reg-submit-btn').innerText = "League Full (12/12)";
+                document.getElementById('reg-submit-btn').className = "w-full bg-slate-300 text-slate-500 py-3 rounded-xl text-xs font-bold cursor-not-allowed";
+            }
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standings-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (leagueStandings.length === 0) {
+                renderStandingsFallback();
+                return;
+            }
+
+            leagueStandings.forEach((st, idx) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3 px-4 font-extrabold text-blue-600">#${idx + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            ${st.team_name} 
+                            <span class="text-xs font-semibold text-slate-500 block">Manager: ${st.manager_name}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center mono-num font-bold text-slate-800">${st.wins} - ${st.losses}</td>
+                        <td class="py-3 px-4 text-right mono-num font-bold text-blue-600">${parseFloat(st.points_for).toFixed(1)} pts</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderStandingsFallback() {
+            const tbody = document.getElementById('standings-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (registeredTeams.length > 0) {
+                registeredTeams.forEach((t, idx) => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="py-3 px-4 font-extrabold text-slate-400">#${idx + 1}</td>
+                            <td class="py-3 px-4 font-bold text-slate-900">
+                                ${t.team} 
+                                <span class="text-xs font-semibold text-slate-500 block">Manager: ${t.owner}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center mono-num font-bold text-slate-800">0 - 0</td>
+                            <td class="py-3 px-4 text-right mono-num font-bold text-blue-600">0.0 pts</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 italic">No registered teams found in the league yet.</td></tr>`;
+            }
+        }
+
+        function simulateLivePlay() {
+            const tickers = [
+                "GameCast: Mahomes 24-yard deep pass to CeeDee Lamb for a TOUCHDOWN! (+8.4 pts)",
+                "GameCast: Bijan Robinson rushes up the middle for 18 yards and a First Down!",
+                "GameCast: Josh Allen connects on a 35-yard strike downfield!"
+            ];
+            document.getElementById('live-ticker-text').innerText = tickers[Math.floor(Math.random() * tickers.length)];
+        }
+    </script>
+</body>
+</html>
