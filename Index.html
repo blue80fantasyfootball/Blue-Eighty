@@ -458,35 +458,42 @@
             let teamOpponentCode = {};
 
             try {
-                // 1. Auto-detect active NFL week and season from Sleeper state API
-                const stateRes = await fetch('https://api.sleeper.app/v1/state/nfl');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+                const stateRes = await fetch('https://api.sleeper.app/v1/state/nfl', { signal: controller.signal });
+                clearTimeout(timeoutId);
                 const nflState = await stateRes.json();
                 
                 const currentWeek = nflState.week || 11;
                 const seasonYear = nflState.season || '2026';
                 
-                document.getElementById('current-slate-label').innerText = `${seasonYear} WEEK ${currentWeek}`;
-                document.getElementById('matchup-week-badge').innerText = `${seasonYear} Week ${currentWeek} Matchup`;
+                const slateElem = document.getElementById('current-slate-label');
+                const badgeElem = document.getElementById('matchup-week-badge');
+                if (slateElem) slateElem.innerText = `${seasonYear} WEEK ${currentWeek}`;
+                if (badgeElem) badgeElem.innerText = `${seasonYear} Week ${currentWeek} Matchup`;
 
-                // 2. Fetch live game schedule for the current active week
                 const scheduleRes = await fetch(`https://api.sleeper.app/v1/schedule/nfl/${seasonYear}/${currentWeek}`);
                 const weekSchedule = await scheduleRes.json();
 
                 if (Array.isArray(weekSchedule)) {
                     weekSchedule.forEach(game => {
-                        let home = game.home_team;
-                        let away = game.away_team;
-                        let timeStr = game.start_time ? new Date(game.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sun 1:00 PM';
+                        if (game && game.home_team && game.away_team) {
+                            let home = game.home_team;
+                            let away = game.away_team;
+                            let timeStr = game.start_time ? new Date(game.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sun 1:00 PM';
 
-                        teamOpponents[home] = `vs ${away} (${timeStr})`;
-                        teamOpponents[away] = `@ ${home} (${timeStr})`;
-                        teamOpponentCode[home] = away;
-                        teamOpponentCode[away] = home;
+                            teamOpponents[home] = `vs ${away} (${timeStr})`;
+                            teamOpponents[away] = `@ ${home} (${timeStr})`;
+                            teamOpponentCode[home] = away;
+                            teamOpponentCode[away] = home;
+                        }
                     });
                 }
             } catch (err) {
-                console.warn("Dynamic state/schedule fetch fallback engaged:", err);
-                document.getElementById('current-slate-label').innerText = `2026 WEEK 11`;
+                console.warn("API network timeout or offline mode detected. Using robust fallback data.", err);
+                const slateElem = document.getElementById('current-slate-label');
+                if (slateElem) slateElem.innerText = `2026 WEEK 11`;
             }
 
             const defensiveMatchupRatings = {
@@ -516,42 +523,33 @@
                 
                 let qbList = [], rbList = [], wrList = [], teList = [];
 
-                Object.values(allPlayers).forEach(p => {
-                    // STRICT ACTIVE FILTER: Must be active, have a real team, and search_rank < 400 to exclude deep practice-squad reserves
-                    if (p.active && p.team && p.first_name && p.last_name && (p.search_rank || 9999) < 400) {
-                        let pos = p.position;
-                        if (pos === 'HB' || pos === 'FB') pos = 'RB';
-                        
-                        if (['QB', 'RB', 'WR', 'TE'].includes(pos)) {
-                            let name = `${p.first_name} ${p.last_name}`;
-                            let entry = { name, pos: pos, team: p.team };
-                            if (pos === 'QB') qbList.push(entry);
-                            else if (pos === 'RB') rbList.push(entry);
-                            else if (pos === 'WR') wrList.push(entry);
-                            else if (pos === 'TE') teList.push(entry);
+                if (allPlayers && typeof allPlayers === 'object') {
+                    Object.values(allPlayers).forEach(p => {
+                        if (p && p.active && p.team && p.first_name && p.last_name && (p.search_rank || 9999) < 400) {
+                            let pos = p.position;
+                            if (pos === 'HB' || pos === 'FB') pos = 'RB';
+                            
+                            if (['QB', 'RB', 'WR', 'TE'].includes(pos)) {
+                                let name = `${p.first_name} ${p.last_name}`;
+                                let entry = { name, pos: pos, team: p.team };
+                                if (pos === 'QB') qbList.push(entry);
+                                else if (pos === 'RB') rbList.push(entry);
+                                else if (pos === 'WR') wrList.push(entry);
+                                else if (pos === 'TE') teList.push(entry);
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
-                // Top 20 QBs, Top 30 RBs, Top 50 WRs, Top 30 TEs
-                qbList.slice(0, 20).forEach((p, idx) => {
-                    rawDatabase.push({ ...p, baseProj: parseFloat((21.5 - (idx * 0.5)).toFixed(1)), posRank: idx + 1 });
-                });
-                rbList.slice(0, 30).forEach((p, idx) => {
-                    rawDatabase.push({ ...p, baseProj: parseFloat((18.5 - (idx * 0.35)).toFixed(1)), posRank: idx + 1 });
-                });
-                wrList.slice(0, 50).forEach((p, idx) => {
-                    rawDatabase.push({ ...p, baseProj: parseFloat((18.0 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 });
-                });
-                teList.slice(0, 30).forEach((p, idx) => {
-                    rawDatabase.push({ ...p, baseProj: parseFloat((13.5 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 });
-                });
+                qbList.slice(0, 20).forEach((p, idx) => rawDatabase.push({ ...p, baseProj: parseFloat((21.5 - (idx * 0.5)).toFixed(1)), posRank: idx + 1 }));
+                rbList.slice(0, 30).forEach((p, idx) => rawDatabase.push({ ...p, baseProj: parseFloat((18.5 - (idx * 0.35)).toFixed(1)), posRank: idx + 1 }));
+                wrList.slice(0, 50).forEach((p, idx) => rawDatabase.push({ ...p, baseProj: parseFloat((18.0 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 }));
+                teList.slice(0, 30).forEach((p, idx) => rawDatabase.push({ ...p, baseProj: parseFloat((13.5 - (idx * 0.25)).toFixed(1)), posRank: idx + 1 }));
 
             } catch (err) {
-                console.warn("Sleeper live player fetch fallback engaged:", err);
+                console.warn("Player map fetch encountered an issue, deploying core roster backup:", err);
             }
 
-            // Fallback safety net if offline
             if (rawDatabase.length === 0) {
                 rawDatabase = [
                     { name: 'Josh Allen', pos: 'QB', team: 'BUF', baseProj: 22.4, posRank: 1 },
@@ -564,7 +562,6 @@
                 ];
             }
 
-            // All 32 NFL Defenses
             const allTeams = Object.keys(defensiveMatchupRatings);
             let defRankCounter = 0;
             allTeams.forEach(teamCode => {
@@ -1036,7 +1033,7 @@
         function renderStandingsFallback() {
             const tbody = document.getElementById('standings-tbody');
             if (!tbody) return;
-            tbody.innerHTML = .length === 0;
+            tbody.innerHTML = '';
 
             if (registeredTeams.length > 0) {
                 registeredTeams.forEach((t, idx) => {
